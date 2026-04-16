@@ -6,16 +6,54 @@ We have not written solutions for the exercises. If you are stuck on anything in
 
 1. For this course, you need to be using a Unix shell like Bash or ZSH. If you are on Linux or macOS, you don't have to do anything special. If you are on Windows, you need to make sure you are not running cmd.exe or PowerShell; you can use [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) or a Linux virtual machine to use Unix-style command-line tools. To make sure you're running an appropriate shell, you can try the command `echo $SHELL`. If it says something like `/bin/bash` or `/usr/bin/zsh`, that means you're running the right program.
 
-    > **Answer** 
-    > ```
-    > rightbear@Rightbear:~$ echo "This is a WSL environment"
-    > This is a WSL environment
-    > rightbear@Rightbear:~$ echo $SHELL
-    > /bin/bash
-    > ```
+    ## **Answer** 
+    ```
+    rightbear@Rightbear:~$ echo "This is a WSL environment"
+    This is a WSL environment
+    rightbear@Rightbear:~$ echo $SHELL
+    /bin/bash
+    ```
 
 2. What does the `-l` flag to `ls` do? Run `ls -l /` and examine the output.
    What do the first 10 characters of each line mean? (Hint: `man ls`)
+
+    ## **Answer** 
+    ### Demo
+    ```
+    rightbear@Rightbear:~$ man ls
+    …
+           -l     use a long listing format
+    …
+    rightbear@Rightbear:~$ ls -l /
+    total 2796
+    lrwxrwxrwx   1 root root       7 Apr 22  2024 bin -> usr/bin
+    drwxr-xr-x   2 root root    4096 Feb 26  2024 bin.usr-is-merged
+    drwxr-xr-x   2 root root    4096 Apr 22  2024 boot
+    drwxr-xr-x  15 root root    3860 Apr 15 13:37 dev
+    drwxr-xr-x  92 root root    4096 Apr 15 13:36 etc
+    drwxr-xr-x   3 root root    4096 Mar 19 16:46 home
+    -rwxr-xr-x   1 root root 2781568 Dec 12 09:58 init
+    lrwxrwxrwx   1 root root       7 Apr 22  2024 lib -> usr/lib
+    drwxr-xr-x   2 root root    4096 Apr  8  2024 lib.usr-is-merged
+    lrwxrwxrwx   1 root root       9 Apr 22  2024 lib64 -> usr/lib64
+    drwx------   2 root root   16384 Mar 19 16:45 lost+found
+    drwxr-xr-x   2 root root    4096 Feb 10 08:54 media
+    drwxr-xr-x   5 root root    4096 Mar 19 16:45 mnt
+    drwxr-xr-x   3 root root    4096 Apr  7 10:51 opt
+    dr-xr-xr-x 270 root root       0 Apr 15 13:36 proc
+    drwx------   3 root root    4096 Apr  9 17:35 root
+    drwxr-xr-x  21 root root     640 Apr 15 13:37 run
+    lrwxrwxrwx   1 root root       8 Apr 22  2024 sbin -> usr/sbin
+    drwxr-xr-x   2 root root    4096 Mar 31  2024 sbin.usr-is-merged
+    drwxr-xr-x   2 root root    4096 Mar 19 16:45 snap
+    drwxr-xr-x   2 root root    4096 Feb 10 08:54 srv
+    dr-xr-xr-x  13 root root       0 Apr 15 13:36 sys
+    drwxrwxrwt   9 root root    4096 Apr 15 13:37 tmp
+    drwxr-xr-x  12 root root    4096 Feb 10 08:54 usr
+    drwxr-xr-x  13 root root    4096 Mar 19 16:45 var
+    ```
+    ### Explain
+    The first 10 characters of an “ls -l” output represent the file type and access permissions. The first character means different file types (regular file, directory, symbolic link, and so on). The next 9 characters mean permissions (read, write and execute), and they are divided into three groups of three characters each (owner, groups and others).
 
 3. In the command `find ~/Downloads -type f -name "*.zip" -mtime +30`, the
    `*.zip` is a "glob". What is a glob? Create a test directory with some
