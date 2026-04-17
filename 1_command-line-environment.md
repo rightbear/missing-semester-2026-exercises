@@ -14,15 +14,14 @@ We have not written solutions for the exercises. If you are stuck on anything in
     /bin/bash
     ```
 
-2. What does the `-l` flag to `ls` do? Run `ls -l /` and examine the output.
-   What do the first 10 characters of each line mean? (Hint: `man ls`)
+2. What does the `-l` flag to `ls` do? Run `ls -l /` and examine the output. What do the first 10 characters of each line mean? (Hint: `man ls`)
 
     ## **Answer** 
     ### Demo
     ```
     rightbear@Rightbear:~$ man ls
     …
-           -l     use a long listing format
+            -l     use a long listing format
     …
     rightbear@Rightbear:~$ ls -l /
     total 2796
@@ -52,20 +51,38 @@ We have not written solutions for the exercises. If you are stuck on anything in
     drwxr-xr-x  12 root root    4096 Feb 10 08:54 usr
     drwxr-xr-x  13 root root    4096 Mar 19 16:45 var
     ```
-    ### Explain
-    The first 10 characters of an “ls -l” output represent the file type and access permissions. The first character means different file types (regular file, directory, symbolic link, and so on). The next 9 characters mean permissions (read, write and execute), and they are divided into three groups of three characters each (owner, groups and others).
+    ### Explanation
+    The first 10 characters of an `ls -l` output represent the file type and access permissions. The first character means different file types (regular file, directory, symbolic link, and so on). The next 9 characters mean permissions (read, write and execute), and they are divided into three groups of three characters each (owner, groups and others).
 
-3. In the command `find ~/Downloads -type f -name "*.zip" -mtime +30`, the
-   `*.zip` is a "glob". What is a glob? Create a test directory with some
-   files and experiment with patterns like `ls *.txt`, `ls file?.txt`, and
-   `ls {a,b,c}.txt`. See [Pattern
-   Matching](https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html)
-   in the Bash manual.
+3. In the command `find ~/Downloads -type f -name "*.zip" -mtime +30`, the `*.zip` is a "glob". What is a glob? Create a test directory with some files and experiment with patterns like `ls *.txt`, `ls file?.txt`, and `ls {a,b,c}.txt`. See [Pattern Matching](https://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html) in the Bash manual.
 
-4. What's the difference between `'single quotes'`, `"double quotes"`, and
-   `$'ANSI quotes'`? Write a command that echoes a string containing a
-   literal `$`, a `!`, and a newline character. See
-   [Quoting](https://www.gnu.org/software/bash/manual/html_node/Quoting.html).
+    ## **Answer** 
+    ### Demo
+    ```
+    rightbear@Rightbear:~$ ls *.txt
+    a.txt  b.txt  c.txt  err.txt  files.txt  info.txt  notes.txt  numbers.txt  result.txt  result2.txt
+    rightbear@Rightbear:~$ ls file?.txt
+    files.txt
+    rightbear@Rightbear:~$ ls {a,b,c}.txt
+    a.txt  b.txt  c.txt
+    rightbear@Rightbear:~$
+    ```
+
+4. What's the difference between `'single quotes'`, `"double quotes"`, and `$'ANSI quotes'`? Write a command that echoes a string containing a literal `$`, a `!`, and a newline character. See [Quoting](https://www.gnu.org/software/bash/manual/html_node/Quoting.html).
+
+    ## **Answer** 
+    ### Explanation
+    * Single Quotes (`'...'`): Enclosing characters in single quotes preserves the literal value of each character within the quotes. A single quote may not occur between single quotes, even when preceded by a backslash (`\`) .
+    * Double quotes (`"..."`): Enclosing characters in double quotes preserves the literal value of all characters within the quotes. The backslash (`\`) retains special meaning only when followed by `$`, `'`, `"`, `\`, or a newline(`\n`).
+    * ANSI Quotes (`$'...'`): Character sequences of the form $'string' are treated as a special kind of single quotes. The sequence expands to string, with backslash-escaped characters in string replaced as specified by the ANSI C standard.
+
+    ### Demo
+    ```
+    rightbear@Rightbear:~$ echo $'Here is a dollar sign $, a exclamation mark !, and new line symbol \n'
+    Here is a dollar sign $, a exclamation mark !, and new line symbol
+
+    rightbear@Rightbear:~$
+    ```
 
 5. The shell has three standard streams: stdin (0), stdout (1), and stderr
    (2). Run `ls /nonexistent /tmp` and redirect stdout to one file and
