@@ -6,7 +6,8 @@ We have not written solutions for the exercises. If you are stuck on anything in
 
 1. For this course, you need to be using a Unix shell like Bash or ZSH. If you are on Linux or macOS, you don't have to do anything special. If you are on Windows, you need to make sure you are not running cmd.exe or PowerShell; you can use [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/) or a Linux virtual machine to use Unix-style command-line tools. To make sure you're running an appropriate shell, you can try the command `echo $SHELL`. If it says something like `/bin/bash` or `/usr/bin/zsh`, that means you're running the right program.
 
-    ## **Answer** 
+    ## **Answer**
+    ### Demo
     ```
     rightbear@Rightbear:~$ echo "This is a WSL environment"
     This is a WSL environment
@@ -84,35 +85,136 @@ We have not written solutions for the exercises. If you are stuck on anything in
     rightbear@Rightbear:~$
     ```
 
-5. The shell has three standard streams: stdin (0), stdout (1), and stderr
-   (2). Run `ls /nonexistent /tmp` and redirect stdout to one file and
-   stderr to another. How would you redirect both to the same file? See
-   [Redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html).
+5. The shell has three standard streams: stdin (0), stdout (1), and stderr (2). Run `ls /nonexistent /tmp` and redirect stdout to one file and stderr to another. How would you redirect both to the same file? See [Redirections](https://www.gnu.org/software/bash/manual/html_node/Redirections.html).
 
-6. `$?` holds the exit status of the last command (0 = success). `&&` runs
-   the next command only if the previous succeeded; `||` runs it only if
-   the previous failed. Write a one-liner that creates `/tmp/mydir` only if
-   it doesn't already exist. See [Exit
-   Status](https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html).
+    ## **Answer** 
+    ### Demo
+    ```
+    rightbear@Rightbear:~$ ls /tmp
+    snap-private-tmp
+    systemd-private-2da47142d2e64a0186a68d9314f8246b-systemd-logind.service-hv8plT
+    systemd-private-2da47142d2e64a0186a68d9314f8246b-systemd-resolved.service-wwZZ9C
+    systemd-private-2da47142d2e64a0186a68d9314f8246b-systemd-timesyncd.service-TyjTcA
+    systemd-private-2da47142d2e64a0186a68d9314f8246b-wsl-pro.service-uWTZTp
+    rightbear@Rightbear:~$ ls /nonexistent
+    ls: cannot access '/nonexistent': No such file or directory
+    rightbear@Rightbear:~$ ls /nonexistent /tmp >practice5.txt 2>&1
+    rightbear@Rightbear:~$ cat practice5.txt
+    ls: cannot access '/nonexistent': No such file or directory
+    /tmp:
+    snap-private-tmp
+    systemd-private-2da47142d2e64a0186a68d9314f8246b-systemd-logind.service-hv8plT
+    systemd-private-2da47142d2e64a0186a68d9314f8246b-systemd-resolved.service-wwZZ9C
+    systemd-private-2da47142d2e64a0186a68d9314f8246b-systemd-timesyncd.service-TyjTcA
+    systemd-private-2da47142d2e64a0186a68d9314f8246b-wsl-pro.service-uWTZTp
+    ```
 
-7. Why does `cd` have to be built into the shell itself rather than a
-   standalone program? (Hint: think about what a child process can and
-   cannot affect in its parent.)
+6. `$?` holds the exit status of the last command (0 = success). `&&` runs the next command only if the previous succeeded; `||` runs it only if the previous failed. Write a one-liner that creates `/tmp/mydir` only if it doesn't already exist. See [Exit Status](https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html).
 
-8. Write a script that takes a filename as an argument (`$1`) and checks
-   whether the file exists using `test -f` or `[ -f ... ]`. It should print
-   different messages depending on whether the file exists. See [Bash
-   Conditional
-   Expressions](https://www.gnu.org/software/bash/manual/html_node/Bash-Conditional-Expressions.html).
+    ## **Answer** 
+    ### Demo
+    ```
+    # Option1
 
-9. Save the script from the previous exercise to a file (e.g., `check.sh`).
-   Try running it with `./check.sh somefile`. What happens? Now run
-   `chmod +x check.sh` and try again. Why is this step necessary? (Hint:
-   look at `ls -l check.sh` before and after the `chmod`.)
+    rightbear@Rightbear:~$ ls /tmp/mydir
+    ls: cannot access '/tmp/mydir': No such file or directory
+    rightbear@Rightbear:~$ [ -d /tmp/mydir ] || mkdir /tmp/mydir && touch /tmp/mydir/newfile.txt
+    rightbear@Rightbear:~$ ls /tmp/mydir
+    newfile.txt
+    ```
+    ```
+    # Option2
+
+    rightbear@Rightbear:~$ ls /tmp/mydir
+    ls: cannot access '/tmp/mydir': No such file or directory
+    rightbear@Rightbear:~$ mkdir -p /tmp/mydir && touch /tmp/mydir/newfile.txt
+
+    ```
+
+7. Why does `cd` have to be built into the shell itself rather than a standalone program? (Hint: think about what a child process can and cannot affect in its parent.)
+   
+    ## **Answer** 
+    ### Explanation
+    Changing the shell’s current working directory must affect the shell process itself. Standalone programs, like executables, run as separate child processes, so any directory change they perform would apply only to that child and not persist when it exits. Making `cd` a shell builtin allows the shell to modify its own process state.
+
+8. Write a script that takes a filename as an argument (`$1`) and checks whether the file exists using `test -f` or `[ -f ... ]`. It should print different messages depending on whether the file exists. See [Bash Conditional Expressions](https://www.gnu.org/software/bash/manual/html_node/Bash-Conditional-Expressions.html).
+
+    ## **Answer** 
+    ### Script (check.sh)
+
+    ```
+    #!/bin/bash
+    set -eo pipefail
+
+    # check if the argument exists
+    if [ -z "$1" ]; then
+        echo "Usage: $0 {filename}"
+        exit 1
+    fi
+
+    # check if the filename passed as the argument exists in currrent path
+    if [ -f "$1" ]; then
+            echo "Congratulations! The passed file exists!";
+    else
+            echo "Wake up! You don't have the passed file";
+    fi;
+    ```
+
+    ### Demo
+    ```
+    rightbear@Rightbear:~$ ./check.sh exist.txt
+    Congratulations! The passed file exists!
+    rightbear@Rightbear:~$ ./check.sh nonexist.txt
+    Wake up! You don't have the passed file
+    ```
+
+9. Save the script from the previous exercise to a file (e.g., `check.sh`). Try running it with `./check.sh somefile`. What happens? Now run `chmod +x check.sh` and try again. Why is this step necessary? (Hint: look at `ls -l check.sh` before and after the `chmod`.)
+
+    ## **Answer** 
+    ### Explanation
+    In Linux, security is built on the principle that files are not executable by default. This prevents users (or malicious scripts) from accidentally running a data file or a document as if it were a program, which could cause system instability. When you type `./check.sh`, you are telling the shell: "Find this file and execute the instructions inside it." The kernel checks the file's metadata for that little "**x**" bit. If it's missing, the kernel refuses to load the file into memory as a process.
+    The `chmod` command changes the permissions of a file or directory to all types of users.The `+x` option specifies that executable permissions should be added. The `+` indicates addition, and `x` represents the executable permission. In summary, the command `chmod +x` is used to add executable permissions to a file in Linux.
+
+    ### Demo
+    ```
+    rightbear@Rightbear:~$ ./check.sh exist.txt
+    -bash: ./check.sh: Permission denied
+    rightbear@Rightbear:~$ ls -l check.sh
+    -rw-r--r-- 1 ejhcaer ejhcaer 342 Apr 16 14:30 check.sh
+    rightbear@Rightbear:~$ ./check.sh exist.txt
+    -bash: ./check.sh: Permission denied
+    rightbear@Rightbear:~$ chmod +x check.sh
+    rightbear@Rightbear:~$ ls -l check.sh
+    -rwxr-xr-x 1 ejhcaer ejhcaer 342 Apr 16 14:30 check.sh
+    rightbear@Rightbear:~$ ./check.sh exist.txt
+    Congratulations! The passed file exists!
+    ```
 
 10. What happens if you add `-x` to the `set` flags in a script? Try it with
-    a simple script and observe the output. See [The Set
-    Builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).
+    a simple script and observe the output. See [The Set Builtin](https://www.gnu.org/software/bash/manual/html_node/The-Set-Builtin.html).
+
+    ## **Answer** 
+    ### Explanation
+    `set -x` will print commands and their arguments as they are executed.
+
+    ### Script (testset.sh)
+    ```
+    #!/bin/bash
+
+    set -x
+
+    FILE="*.txt"
+    ls $FILE
+    ```
+
+    ### Demo
+    ```
+    rightbear@Rightbear:~$ ./testset.sh
+    + FILE='*.txt'
+    + ls a.txt b.txt c.txt err.txt exist.txt files.txt info.txt notes.txt numbers.txt result.txt result2.txt
+    a.txt  c.txt    exist.txt  info.txt   numbers.txt    result.txt
+    b.txt  err.txt  files.txt  notes.txt  result2.txt
+    ```
 
 11. Write a command that copies a file to a backup with today's date in the
     filename (e.g., `notes.txt` → `notes_2026-01-12.txt`). (Hint: `$(date
