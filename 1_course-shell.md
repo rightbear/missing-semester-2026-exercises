@@ -112,19 +112,17 @@ We have not written solutions for the exercises. If you are stuck on anything in
 6. `$?` holds the exit status of the last command (0 = success). `&&` runs the next command only if the previous succeeded; `||` runs it only if the previous failed. Write a one-liner that creates `/tmp/mydir` only if it doesn't already exist. See [Exit Status](https://www.gnu.org/software/bash/manual/html_node/Exit-Status.html).
 
     ## **Answer** 
-    ### Demo
+    ### Option1 Demo
     ```console
-    # Option1
-
     rightbear@Rightbear:~$ ls /tmp/mydir
     ls: cannot access '/tmp/mydir': No such file or directory
     rightbear@Rightbear:~$ [ -d /tmp/mydir ] || mkdir /tmp/mydir && touch /tmp/mydir/newfile.txt
     rightbear@Rightbear:~$ ls /tmp/mydir
     newfile.txt
     ```
-    ```console
-    # Option2
 
+    ### Option2 Demo
+    ```console
     rightbear@Rightbear:~$ ls /tmp/mydir
     ls: cannot access '/tmp/mydir': No such file or directory
     rightbear@Rightbear:~$ mkdir -p /tmp/mydir && touch /tmp/mydir/newfile.txt
@@ -142,7 +140,7 @@ We have not written solutions for the exercises. If you are stuck on anything in
     ## **Answer** 
     ### Script (check.sh)
 
-    ```
+    ```bash
     #!/bin/bash
     set -eo pipefail
 
@@ -198,7 +196,7 @@ We have not written solutions for the exercises. If you are stuck on anything in
     `set -x` will print commands and their arguments as they are executed.
 
     ### Script (testset.sh)
-    ```
+    ```bash
     #!/bin/bash
 
     set -x
@@ -221,7 +219,7 @@ We have not written solutions for the exercises. If you are stuck on anything in
     ## **Answer** 
 
     ### Original Script (flasky.sh)
-    ```
+    ```bash
     #!/bin/bash
     set -euo pipefail
 
@@ -249,7 +247,7 @@ We have not written solutions for the exercises. If you are stuck on anything in
     ```
 
     ### Modified Script (flasky_modified.sh)
-    ```
+    ```bash
     #!/bin/bash
     set -euo pipefail
 
@@ -558,7 +556,7 @@ We have not written solutions for the exercises. If you are stuck on anything in
 
     ### Modified Version Demo
     ```console
-    rightbear@Rightbear:~$ cat ~/.bash_history  | sort | \
+    rightbear@Rightbear:~$ cat ~/.bash_history | sort | \
     uniq -c  | sort -nk1,1 | tail -n10 \
     | awk '{print $2}' | paste -sd,
     vim,bash,cd,cat,jobs,exit,sudo,tldr,ls,ls
