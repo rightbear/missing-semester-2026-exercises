@@ -139,7 +139,6 @@ We have not written solutions for the exercises. If you are stuck on anything in
 
     ## **Answer** 
     ### Script (check.sh)
-
     ```bash
     #!/bin/bash
     set -eo pipefail

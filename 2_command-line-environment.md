@@ -32,10 +32,6 @@
     drwx------+ 47 user group 1.5K Jan 12 18:08 ..
     ```
 
-{% comment %}
-ls -lath --color=auto
-{% endcomment %}
-
     ## **Answer**
     ### Demo
     ```console
@@ -159,23 +155,70 @@ ls -lath --color=auto
     ```
 
     ### Explanation
-    `printenv` command outputs environment variables in a "raw" format: `KEY=VALUE`. (e.g. `HOME=/home/rightbear`)
-    `export` command, as a Shell built-in, outputs environment variables in a format that the Shell can re-execute as a script. It adds the prefix `declare -x` and wraps values in double quotes. (e.g. `declare -x HOME="/home/rightbear"`)
+    `printenv` command outputs environment variables in a "raw" format: `KEY=VALUE`. (e.g. `HOME=/home/rightbear`) \
+    `export` command, as a Shell built-in, outputs environment variables in a format that the Shell can re-execute as a script. It adds the prefix `declare -x` and wraps values in double quotes. (e.g. `declare -x HOME="/home/rightbear"`) \
     Because `diff` command is a literal line-by-line comparison tool, it sees `HOME=...` and `declare -x HOME="..."` as completely different strings.
 
 ## Environment Variables
 
 1. Write bash functions `marco` and `polo` that do the following: whenever you execute `marco` the current working directory should be saved in some manner, then when you execute `polo`, no matter what directory you are in, `polo` should `cd` you back to the directory where you executed `marco`. For ease of debugging you can write the code in a file `marco.sh` and (re)load the definitions to your shell by executing `source marco.sh`.
 
-{% comment %}
-marco() {
-    export MARCO=$(pwd)
-}
+    ## **Answer**
+    ### Script (marco.sh)
+    ```bash
+    #!/bin/bash
 
-polo() {
-    cd "$MARCO"
-}
-{% endcomment %}
+    # Save the current working directory
+    marco()
+    {
+            # Use 'export' to ensure the variable is not just local to this shell,
+            # but also accessible to any child processes or sub-shells started from here.
+            export CURRENT_DIR=$(pwd)
+            echo "Directory $CURRENT_DIR saved!"
+    }
+
+    # polo: Change the directory to the one saved by marco
+    polo()
+    {
+            # Check if marco has been executed
+            if [ -z "$CURRENT_DIR" ]; then
+                    echo "Error: You haven't executed 'marco' yet!"
+            else
+                    cd "$CURRENT_DIR"
+            fi
+    }
+    ```
+
+    ### Demo
+    ```console
+    rightbear@Rightbear:~$ source marco.sh
+    rightbear@Rightbear:~$ pwd
+    /home/rightbear
+    rightbear@Rightbear:~$ polo
+    Please execute marco before executing polo.
+    rightbear@Rightbear:~$ marco
+    rightbear@Rightbear:~$ pwd
+    /home/rightbear
+    rightbear@Rightbear:~$ echo $CURRENT_DIR
+    /home/rightbear
+    rightbear@Rightbear:~$ cd test_marco
+    rightbear@Rightbear:~/test_marco$ pwd
+    /home/rightbear/test_marco
+    rightbear@Rightbear:~/test_marco$ marco
+    rightbear@Rightbear:~/test_marco$ echo $CURRENT_DIR
+    /home/rightbear/test_marco
+    rightbear@Rightbear:~/test_marco$ cd ~
+    rightbear@Rightbear:~$ pwd
+    /home/rightbear
+    rightbear@Rightbear:~$ polo
+    rightbear@Rightbear:~/test_marco$ pwd
+    /home/rightbear/test_marco
+    rightbear@Rightbear:~/test_marco$ cd ~
+    rightbear@Rightbear:~$ rm -r test_marco/
+    rightbear@Rightbear:~$ polo
+    -bash: cd: /home/rightbear/test_marco: No such file or directory
+    rightbear@Rightbear:~$
+    ```
 
 ## Return Codes
 
