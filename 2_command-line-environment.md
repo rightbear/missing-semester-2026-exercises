@@ -238,19 +238,55 @@
     echo "Everything went according to plan"
     ```
 
-{% comment %}
-#!/usr/bin/env bash
+    ## **Answer**
+    ### Script (return_code_practice.sh)
+    ```bash
+    #!/usr/bin/env bash
 
-count=0
-until [[ "$?" -ne 0 ]];
-do
-  count=$((count+1))
-  ./random.sh &> out.txt
-done
+    # Naming the script in the description of problem as test_fail.sh
+    TEST_SH="test_fail.sh"
 
-echo "found error after $count runs"
-cat out.txt
-{% endcomment %}
+    # Naming the file to record the testing result as record_fail.log
+    RECORD_LOG="record_fail.log"
+
+    # Initialize the counter variable and recording file
+    round=0
+    : > $RECORD_LOG
+
+    # Until Loop continues as long as the return code of testing command is 0
+    until [[ "$?" -ne 0 ]];
+    do
+        round=$((round+1))
+
+        # Print the progress of until loops
+        echo -ne "The script has been run $round rounds\r"
+
+        # This line of code determine $? value in the next round of loops
+        ./$TEST_SH >> $RECORD_LOG 2>&1
+    done
+
+    # Output the result of the whole testing procedure
+    cat $RECORD_LOG
+    echo "The script takes $round runs to fail"
+    ```
+
+    ### Demo
+    ```console
+    rightbear@Rightbear:~$ ./return_code_practice.sh
+    Everything went according to plan
+    Everything went according to plan
+    Everything went according to plan
+    Everything went according to plan
+    Everything went according to plan
+    Everything went according to plan
+    Everything went according to plan
+    Everything went according to plan
+    Everything went according to plan
+    Everything went according to plan
+    Something went wrong
+    The error was using magic numbers
+    The script takes 11 runs to fail
+    ```
 
 ## Signals and Job Control
 
