@@ -1,5 +1,9 @@
 # Exercises
 
+> Testing Environment: 
+> 1. Windows11 + WSL2 (Ubuntu 24.04 LTS)
+> 2. Google Compute Engine (Ubuntu 24.04 LTS)
+
 All classes in this course are accompanied by a series of exercises. Some give you a specific task to do, while others are open-ended, like "try using X and Y programs". We highly encourage you to try them out.
 
 We have not written solutions for the exercises. If you are stuck on anything in particular, feel free to post in `#missing-semester-forum` on [Discord](https://ossu.dev/#community) or send us an email describing what you've tried so far, and we will try to help you out. These exercises will also likely work well as initial prompts in a conversation with an LLM where you can interactively dive into the topic. The real value in these exercises is the journey of discovering the answers, not the answer itself. We encourage you to follow tangents and ask "why" as you work through them, rather than just looking for the shortest path to the solution.
@@ -177,12 +181,12 @@ We have not written solutions for the exercises. If you are stuck on anything in
     rightbear@Rightbear:~$ ./check.sh exist.txt
     -bash: ./check.sh: Permission denied
     rightbear@Rightbear:~$ ls -l check.sh
-    -rw-r--r-- 1 ejhcaer ejhcaer 342 Apr 16 14:30 check.sh
+    -rw-r--r-- 1 rightbear rightbear 342 Apr 16 14:30 check.sh
     rightbear@Rightbear:~$ ./check.sh exist.txt
     -bash: ./check.sh: Permission denied
     rightbear@Rightbear:~$ chmod +x check.sh
     rightbear@Rightbear:~$ ls -l check.sh
-    -rwxr-xr-x 1 ejhcaer ejhcaer 342 Apr 16 14:30 check.sh
+    -rwxr-xr-x 1 rightbear rightbear 342 Apr 16 14:30 check.sh
     rightbear@Rightbear:~$ ./check.sh exist.txt
     Congratulations! The passed file exists!
     ```

@@ -1,5 +1,9 @@
 # Exercises
 
+> Testing Environment: 
+> 1. Windows11 + WSL2 (Ubuntu 24.04 LTS)
+> 2. Google Compute Engine (Ubuntu 24.04 LTS)
+
 ## Arguments and Globs
 
 1. You might see commands like `cmd --flag -- --notaflag`. The `--` is a special argument that tells the program to stop parsing flags. Everything after `--` is treated as a positional argument. Why might this be useful? Try running `touch -- -myfile` and then removing it without `--`.
@@ -249,9 +253,10 @@
     # Naming the file to record the testing result as record_fail.log
     RECORD_LOG="record_fail.log"
 
-    # Initialize the counter variable and recording file
+    # Initialize the counter variable, recording file and $? value 
     round=0
     : > $RECORD_LOG
+    true
 
     # Until Loop continues as long as the return code of testing command is 0
     until [[ "$?" -ne 0 ]];
