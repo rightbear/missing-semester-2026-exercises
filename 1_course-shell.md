@@ -219,8 +219,7 @@ We have not written solutions for the exercises. If you are stuck on anything in
 
 11. Write a command that copies a file to a backup with today's date in the filename (e.g., `notes.txt` → `notes_2026-01-12.txt`). (Hint: `$(date+%Y-%m-%d)`). See [Command Substitution](https://www.gnu.org/software/bash/manual/html_node/Command-Substitution.html).
 
-    ## **Answer** 
-
+    ## **Answer**
     ### Original Script (flasky.sh)
     ```bash
     #!/bin/bash

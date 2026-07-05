@@ -295,11 +295,87 @@
 
 ## Signals and Job Control
 
-1. Start a `sleep 10000` job in a terminal, background it with `Ctrl-Z` and continue its execution with `bg`. Now use [`pgrep`](https://www.man7.org/linux/man-pages/man1/pgrep.1.html) to find its pid and [`pkill`](https://man7.org/linux/man-pages/man1/pgrep.1.html) to kill it without ever typing the pid itself. (Hint: use the `-af` flags).
+1. Start a `sleep 10000` job in a terminal, background it with `Ctrl-Z` and continue its execution with `bg`. Now use [`pgrep`](https://www.man7.org/linux/man-pages/man1/pgrep.1.html) to find its pid and [`pkill`](https://man7.org/linux/man-pages/man1/pgrep.1.html) to kill it without ever typing the pid itself. (Hint: use the `-lf` flags).
+
+    ## **Answer**
+    ### Explanation
+    `-f` flag in pkill and pgrep normally only matched against the process name. When `-f` is set, the full command line is used. 
+    `-l` flag in pgrep list the process name as well as the process ID.
+    The combination of two flags can make finding and terminating specific processes both precise and safe, without ever needing to manually type the PID.
+
+    ### Demo
+    ```console
+    rightbear@Rightbear:~$ sleep 10000
+    ^Z
+    [1]+  Stopped                 sleep 10000
+    rightbear@Rightbear:~$ bg
+    [1]+ sleep 10000 &
+    rightbear@Rightbear:~$ pgrep -lf "sleep 10000"
+    1320 sleep
+    rightbear@Rightbear:~$ pkill -f "sleep 10000"
+    [1]+  Terminated              sleep 10000
+    ```
 
 2. Say you don't want to start a process until another completes. How would you go about it? In this exercise, our limiting process will always be `sleep 60 &`. One way to achieve this is to use the [`wait`](https://www.man7.org/linux/man-pages/man1/wait.1p.html) command. Try launching the sleep command and having an `ls` wait until the background process finishes.
 
     However, this strategy will fail if we start in a different bash session, since `wait` only works for child processes. One feature we did not discuss in the notes is that the `kill` command's exit status will be zero on success and nonzero otherwise. `kill -0` does not send a signal but will give a nonzero exit status if the process does not exist. Write a bash function called `pidwait` that takes a pid and waits until the given process completes. You should use `sleep` to avoid wasting CPU unnecessarily.
+
+    ## **Answer**
+    ### Function file (test_pidwait)
+    ```bash
+    pidwait() {
+
+        # Check if PID is input as parameter
+        if [ -z "$1" ]; then
+            echo "Usage: pidwait <PID>"
+            return 1
+        fi
+
+        local testpid=$1
+
+        echo "Starting to monitor PID: $testpid"
+
+        # As long as the return code of "kill -0" is not 0, keeping the while loop continuing
+        while kill -0 $testpid 2>/dev/null; do
+            echo "Pleasd keep waiting"
+            sleep 5
+        done
+
+        echo "Process $testpid has completed!"
+    }
+    ```
+
+    ### Demo1 (Terminal 1)
+    ```console
+    rightbear@Rightbear:~$ source test_pidwait
+    rightbear@Rightbear:~$ pidwait
+    Usage: pidwait <PID>
+    ```
+
+    ### Demo2 (Terminal 2)
+    ```console
+    rightbear@Rightbear:~$ sleep 60 &
+    [1] 4390
+    ```
+    
+    ### Demo3 (Terminal 1)
+    ```console
+    rightbear@Rightbear:~$ pidwait 4390
+    Starting to monitor PID: 4390
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Pleasd keep waiting
+    Process 4390 has completed!
+    ```
 
 ## Files and Permissions
 
