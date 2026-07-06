@@ -233,7 +233,7 @@
 
     n=$(( RANDOM % 100 ))
 
-    if [[ n -eq 42 ]]; then
+    if [[ $n -eq 42 ]]; then
        echo "Something went wrong"
        >&2 echo "The error was using magic numbers"
        exit 1
@@ -299,12 +299,19 @@
 
     ## **Answer**
     ### Explanation
-    `-f` flag in pkill and pgrep normally only matched against the process name. When `-f` is set, the full command line is used. 
-    `-l` flag in pgrep list the process name as well as the process ID.
-    The combination of two flags can make finding and terminating specific processes both precise and safe, without ever needing to manually type the PID.
+    The combination of `-f` and `-l` flags can make finding and terminating specific processes both precise and safe, without ever needing to manually type the PID.
 
     ### Demo
     ```console
+    rightbear@Rightbear:~$ man pkill
+    …
+       -f, --full
+              The pattern is normally only matched against the process name.  When -f is set, the full command line is used.
+    …
+       -l, --list-name
+              List the process name as well as the process ID.  (pgrep only.)
+    …
+
     rightbear@Rightbear:~$ sleep 10000
     ^Z
     [1]+  Stopped                 sleep 10000
@@ -357,7 +364,7 @@
     rightbear@Rightbear:~$ sleep 60 &
     [1] 4390
     ```
-    
+
     ### Demo3 (Terminal 1)
     ```console
     rightbear@Rightbear:~$ pidwait 4390
@@ -380,6 +387,72 @@
 ## Files and Permissions
 
 1. (Advanced) Write a command or script to recursively find the most recently modified file in a directory. More generally, can you list all files by recency?
+
+    ## **Answer**
+    ### Command
+    `find . -type f -exec stat --format='%Y %n' {} + | sort -n | grep -Eo '[^/]+$'`
+
+    ### Explanation
+    Find all files in the current directory and compile them into a file list. The file list includes last modified time (presented in Unix seconds) and the file path of files. $\rightarrow$
+    Sort the file list according to the last modified time of files. $\rightarrow$
+    Extract only the portion of the file list containing the file path.
+
+    ### Demo
+    ```console
+    rightbear@Rightbear:~/test_recency$ tree
+    .
+    ├── directory_1
+    │   ├── file_1
+    │   └── file_4
+    ├── directory_2
+    │   ├── file with space_5
+    │   └── file_3
+    └── file_2
+
+    3 directories, 5 files
+    rightbear@Rightbear:~/test_recency$ ls -latR
+    .:
+    total 16
+    drwxr-xr-x  2 rightbear rightbear 4096 Apr 30 16:03 directory_2
+    drwxr-xr-x  2 rightbear rightbear 4096 Apr 30 15:50 directory_1
+    drwxr-xr-x  4 rightbear rightbear 4096 Apr 30 15:50 .
+    drwxr-x--- 20 rightbear rightbear 4096 Apr 30 15:50 ..
+    -rw-r--r--  1 rightbear rightbear    0 Apr 30 15:48 file_2
+
+    ./directory_2:
+    total 8
+    drwxr-xr-x 2 rightbear rightbear 4096 Apr 30 16:03  .
+    -rw-r--r-- 1 rightbear rightbear    0 Apr 30 16:03 'file with space_5'
+    drwxr-xr-x 4 rightbear rightbear 4096 Apr 30 15:50  ..
+    -rw-r--r-- 1 rightbear rightbear    0 Apr 30 15:49  file_3
+
+    ./directory_1:
+    total 8
+    drwxr-xr-x 2 rightbear rightbear 4096 Apr 30 15:50 .
+    -rw-r--r-- 1 rightbear rightbear    0 Apr 30 15:50 file_4
+    drwxr-xr-x 4 rightbear rightbear 4096 Apr 30 15:50 ..
+    -rw-r--r-- 1 rightbear rightbear    0 Apr 30 15:48 file_1
+
+    rightbear@Rightbear:~/test_recency$ echo "Files modified from the newest to the oldest:" \
+    ; find . -type f -exec stat --format='%Y %n' {} + \
+    | sort -nr | sed 's/[^ ]* //'
+    Files modified from the newest to the oldest:
+    ./directory_2/file with space_5
+    ./directory_1/file_4
+    ./directory_2/file_3
+    ./file_2
+    ./directory_1/file_1
+
+    rightbear@Rightbear:~/test_recency$ touch ./file_2
+    rightbear@Rightbear:~/test_recency$ echo "Files modified from the newest to the oldest:" \
+    ; find . -type f -exec stat --format='%Y %n' {} + \
+    | sort -nr | sed 's/[^ ]* //'
+    ./file_2
+    ./directory_2/file with space_5
+    ./directory_1/file_4
+    ./directory_2/file_3
+    ./directory_1/file_1
+    ```
 
 ## Terminal Multiplexers
 
