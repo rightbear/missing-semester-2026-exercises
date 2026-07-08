@@ -526,19 +526,657 @@
 
 1. Create an alias `dc` that resolves to `cd` for when you type it wrong.
 
+    ## **Answer**
+    ### Demo
+    ```console
+    rightbear@Rightbear:~$ alias dc="cd"
+    rightbear@Rightbear:~$ dc test
+    rightbear@Rightbear:~/test$
+    ```
+
 2. Run `history | awk '{$1="";print substr($0,2)}' | sort | uniq -c | sort -n | tail -n 10` to get your top 10 most used commands and consider writing shorter aliases for them. Note: this works for Bash; if you're using ZSH, use `history 1` instead of just `history`.
+
+    ## **Answer**
+    ### Demo
+    ```console
+    rightbear@Rightbear:~$ history | awk '{$1="";print substr($0,2)}' | sort | uniq -c | sort -n | tail -n 10
+        15 clear
+        16 ls -ltr /tmp
+        17 cat .bashrc
+        17 top
+        17 sleep 60 &
+        23 ps -aux
+        24 ls -ltr ~
+        34 tmux ls
+        34 exit
+        38 sudo apt update -y
+    rightbear@Rightbear:~$ cat .bashrc
+    …
+    # Alias definitions.
+    # You may want to put all your additions into a separate file like
+    # ~/.bash_aliases, instead of adding them here directly.
+    # See /usr/share/doc/bash-doc/examples in the bash-doc package.
+
+    if [ -f ~/.bash_aliases ]; then
+        . ~/.bash_aliases
+    fi
+    …
+    rightbear@Rightbear:~$ cat ~/.bash_aliases
+    alias cl="clear"
+    alias lstp="ls -ltr /tmp"
+    alias showbrc="cat .bashrc"
+    alias tp="top"
+    alias slp60b="sleep 60 &"
+    alias psx="ps -aux"
+    alias lshome="ls -ltr ~"
+    alias tmls="tmux ls"
+    alias et="exit"
+    alias updateall="sudo apt update -y"
+    rightbear@Rightbear:~$ source ~/.bash_aliases
+    ```
 
 3. Create a folder for your dotfiles and set up version control.
 
+    ## **Answer** 
+    ### Script file (makesymlinks.sh)
+    ```bash
+    #!/bin/bash
+
+    ############################
+
+    # .make.sh
+    # This script creates symlinks from the home directory to any desired dotfiles in ~/dotfiles
+
+    ############################
+
+    ########## Variables
+
+    dir=~/dotfiles                    # dotfiles directory
+    olddir=~/dotfiles_old             # old dotfiles backup directory
+    files="bash_aliases"    # list of files/folders to symlink in homedir
+
+    ##########
+
+    # create dotfiles_old in homedir
+
+    echo -n "Creating $olddir for backup of any existing dotfiles in ~ ..."
+    mkdir -p $olddir
+    echo "done"
+
+    # change to the dotfiles directory
+
+    echo -n "Changing to the $dir directory ..."
+    cd $dir
+    echo "done"
+
+    # move any existing dotfiles in homedir to dotfiles_old directory, then create symlinks from the homedir to any files in the ~/dotfiles directory specified in $files
+
+    for file in $files; do
+        echo "Moving any existing dotfiles from ~ to $olddir"
+        mv ~/.$file ~/dotfiles_old/
+        echo "Creating symlink to $file in home directory."
+        ln -s $dir/$file ~/.$file
+    done
+    ```
+
+    ### Demo
+    ```console
+    rightbear@Rightbear:~$ mkdir ~/dotfiles
+    rightbear@Rightbear:~$ cp ~/.bash_aliases ~/dotfiles/bash_aliases
+    rightbear@Rightbear:~$ ls ~/dotfiles
+    bash_aliases
+    rightbear@Rightbear:~$ cd ~/dotfiles
+    rightbear@Rightbear:~/dotfiles$ vim makesymlinks.sh
+    rightbear@Rightbear:~/dotfiles$ git init
+    hint: Using 'master' as the name for the initial branch. This default branch name
+    hint: is subject to change. To configure the initial branch name to use in all
+    hint: of your new repositories, which will suppress this warning, call:
+    hint:
+    hint:   git config --global init.defaultBranch <name>
+    hint:
+    hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+    hint: 'development'. The just-created branch can be renamed via this command:
+    hint:
+    hint:   git branch -m <name>
+    Initialized empty Git repository in /home/rightbear/dotfiles/.git/
+    rightbear@Rightbear:~/dotfiles$ git add makesymlinks.sh
+    rightbear@Rightbear:~/dotfiles$ git add bash_aliases
+    rightbear@Rightbear:~/dotfiles$ git commit -m 'My first Git commit of my dotfiles'
+    [master (root-commit) 30008b1] My first Git commit of my dotfiles
+    2 files changed, 47 insertions(+)
+    create mode 100644 bash_aliases
+    create mode 100644 makesymlinks.sh
+    rightbear@Rightbear:~/dotfiles$ git log
+    commit 30008b1ea832b48b129edb0dd4c68a55bf672204 (HEAD -> master)
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Mon Jun 29 15:40:07 2026 +0800
+
+        My first Git commit of my dotfiles
+
+    ```
+
 4. Add a configuration for at least one program, e.g. your shell, with some customization (to start off, it can be something as simple as customizing your shell prompt by setting `$PS1`).
+
+    ## **Answer** 
+    ### Demo (Customize bash prompt with Git info)
+    ```console
+    rightbear@Rightbear:~$ vim ~/.bashrc
+    …
+    # Source git prompt if available
+    if [ -f /usr/lib/git-core/git-sh-prompt ]; then
+        source /usr/lib/git-core/git-sh-prompt
+    elif [ -f /usr/share/git-core/contrib/completion/git-prompt.sh ]; then
+        source /usr/share/git-core/contrib/completion/git-prompt.sh
+    fi
+
+    if command -v __git_ps1 &>/dev/null; then
+        GIT_PS1_SHOWDIRTYSTATE=1
+        GIT_PS1_SHOWUNTRACKEDFILES=1
+    fi
+
+    __prompt_command() {
+        local exit=$?
+
+        # Colors
+        local reset='\[\033[00m\]'
+        local bold_green='\[\033[01;32m\]'
+        local bold_blue='\[\033[01;34m\]'
+        local bold_yellow='\[\033[01;33m\]'
+        local bold_red='\[\033[01;31m\]'
+
+        # Exit status indicator
+        local status_color
+        if [ $exit -eq 0 ]; then
+            status_color="$bold_green"
+        else
+            status_color="$bold_red"
+        fi
+
+        # Git branch
+        local git_part=""
+        if command -v __git_ps1 &>/dev/null; then
+            git_part="${bold_yellow}$(__git_ps1 " (%s)")${reset}"
+        fi
+
+        PS1="${bold_green}\u@\h${reset}:${bold_blue}\w${reset}${git_part} ${status_color}\$${reset} "
+    }
+
+    export PROMPT_COMMAND=__prompt_command 
+    …
+    rightbear@Rightbear:~$ source ~/.bashrc
+    rightbear@Rightbear:~ $ cd dotfiles/
+    rightbear@Rightbear:~/dotfiles (master) $ git branch --show-current
+    master
+    rightbear@Rightbear:~/dotfiles (master) $ git switch -c test-branch
+    Switched to a new branch 'test-branch'
+    rightbear@Rightbear:~/dotfiles (test-branch) $ git branch --show-current
+    test-branch
+    rightbear@Rightbear:~/dotfiles (test-branch) $ git switch master
+    Switched to branch 'master'
+    rightbear@Rightbear:~/dotfiles (master) $ git branch --show-current
+    master
+    ```
+
+    ### Demo: Supplement
+    ```console
+    rightbear@Rightbear:~ $ vim .bash_profile
+    …
+    # Automatically source ~/.bashrc when the user login to the shell
+    if [ -f ~/.bashrc ]; then
+        source ~/.bashrc
+    fi
+    …
+    ```
 
 5. Set up a method to install your dotfiles quickly (and without manual effort) on a new machine. This can be as simple as a shell script that calls `ln -s` for each file, or you could use a [specialized utility](https://dotfiles.github.io/utilities/).
 
+    ## **Answer** 
+    ### Demo: Preparation (Use GNU Stow)
+    ```console
+    rightbear@Rightbear:~ $ sudo apt install stow
+    Reading package lists... Done
+    Building dependency tree... Done
+    Reading state information... Done
+    Suggested packages:
+    doc-base
+    The following NEW packages will be installed:
+    stow
+    0 upgraded, 1 newly installed, 0 to remove and 35 not upgraded.
+    Need to get 380 kB of archives.
+    After this operation, 865 kB of additional disk space will be used.
+    Get:1 https://arm.seli.gic.ericsson.se/artifactory/ubuntu-2rc/ubuntu noble/universe amd64 stow all 2.3.1-1 [380 kB]
+    Fetched 380 kB in 13s (29.8 kB/s)
+    Selecting previously unselected package stow.
+    (Reading database ... 95026 files and directories currently installed.)
+    Preparing to unpack .../archives/stow_2.3.1-1_all.deb ...
+    Unpacking stow (2.3.1-1) ...
+    Setting up stow (2.3.1-1) ...
+    Processing triggers for man-db (2.12.0-4build2) ...
+    Processing triggers for install-info (7.1-3build2) …
+    rightbear@Rightbear:~$ cat ~/.bash_aliases
+    alias cl="clear"
+    alias lstp="ls -ltr /tmp"
+    alias showbrc="cat .bashrc"
+    alias tp="top"
+    alias slp60b="sleep 60 &"
+    alias psx="ps -aux"
+    alias lshome="ls -ltr ~"
+    alias tmls="tmux ls"
+    alias et="exit"
+    alias updateall="sudo apt update -y"
+    rightbear@Rightbear:~ $ mkdir dotfiles_stow
+    rightbear@Rightbear:~$ cp ~/.bash_aliases ~/dotfiles_stow/.bash_aliases
+    rightbear@Rightbear:~ $ ls -a ~/dotfiles_stow
+    .  ..  .bash_aliases  .git
+    rightbear@Rightbear:~ $ alias -p
+    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+    alias cl='clear'
+    alias egrep='egrep --color=auto'
+    alias et='exit'
+    alias fgrep='fgrep --color=auto'
+    alias grep='grep --color=auto'
+    alias l='ls -CF'
+    alias la='ls -A'
+    alias ll='ls -alF'
+    alias ls='ls --color=auto'
+    alias lshome='ls -ltr ~'
+    alias lstp='ls -ltr /tmp'
+    …
+    rightbear@Rightbear:~ $ cd dotfiles_stow/
+    rightbear@Rightbear:~/dotfiles_stow $ git init .
+    hint: Using 'master' as the name for the initial branch. This default branch name
+    hint: is subject to change. To configure the initial branch name to use in all
+    hint: of your new repositories, which will suppress this warning, call:
+    hint:
+    hint:   git config --global init.defaultBranch <name>
+    hint:
+    hint: Names commonly chosen instead of 'master' are 'main', 'trunk' and
+    hint: 'development'. The just-created branch can be renamed via this command:
+    hint:
+    hint:   git branch -m <name>
+    Initialized empty Git repository in /home/rightbear/dotfiles_stow/.git/
+    rightbear@Rightbear:~/dotfiles_stow (master #%) $ git add .
+    rightbear@Rightbear:~/dotfiles_stow (master +) $ git commit -m "My first Git commit of my dotfiles with GNU Stow"
+    [master (root-commit) 8a9d0c3] My first Git commit of my dotfiles with GNU Stow
+    1 file changed, 10 insertions(+)
+    create mode 100644 .bash_aliases
+
+    ```
+
+    ### Demo: Method 1 (Install dotfiles with GNU Stow)
+    ```console
+    rightbear@Rightbear:~/dotfiles_stow (master) $ mv ../.bash_aliases ../.bash_aliases.bkp
+    rightbear@Rightbear:~/dotfiles_stow (master) $ exit
+    logout
+    PS C:\WINDOWS\System32> wsl ~
+    rightbear@Rightbear:~ $ alias -p
+    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+    alias egrep='egrep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias grep='grep --color=auto'
+    alias l='ls -CF'
+    alias la='ls -A'
+    alias ll='ls -alF'
+    alias ls='ls --color=auto'
+    rightbear@Rightbear:~ $ cd dotfiles_stow/
+    rightbear@Rightbear:~/dotfiles_stow (master) $ stow .
+    rightbear@Rightbear:~/dotfiles_stow (master) $ cd $HOME
+    rightbear@Rightbear:~ $ ls -lah .bash_aliases
+    lrwxrwxrwx 1 rightbear rightbear 27 Jun 30 13:42 .bash_aliases -> dotfiles_stow/.bash_aliases
+    rightbear@Rightbear:~ $ source .bashrc
+    rightbear@Rightbear:~ $ alias -p
+    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+    alias cl='clear'
+    alias egrep='egrep --color=auto'
+    alias et='exit'
+    alias fgrep='fgrep --color=auto'
+    alias grep='grep --color=auto'
+    alias l='ls -CF'
+    alias la='ls -A'
+    alias ll='ls -alF'
+    alias ls='ls --color=auto'
+    alias lshome='ls -ltr ~'
+    alias lstp='ls -ltr /tmp'
+    …
+    ```
+
+    ### Demo: Method 2 (Install dotfiles with GNU Stow)
+    ```console
+    rightbear@Rightbear:~/dotfiles_stow (master) $ rm ../.bash_aliases
+    rightbear@Rightbear:~/dotfiles_stow (master) $ exit
+    logout
+    PS C:\WINDOWS\System32> wsl ~
+    rightbear@Rightbear:~ $ alias -p
+    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+    alias egrep='egrep --color=auto'
+    alias fgrep='fgrep --color=auto'
+    alias grep='grep --color=auto'
+    alias l='ls -CF'
+    alias la='ls -A'
+    alias ll='ls -alF'
+    alias ls='ls --color=auto'
+    rightbear@Rightbear:~ $ cd dotfiles_stow/
+    rightbear@Rightbear:~/dotfiles_stow (master) $ stow --adopt .
+    rightbear@Rightbear:~/dotfiles_stow (master) $ cd $HOME
+    rightbear@Rightbear:~ $ ls -lah .bash_aliases
+    lrwxrwxrwx 1 rightbear rightbear 27 Jun 30 14:09 .bash_aliases -> dotfiles_stow/.bash_aliases
+    rightbear@Rightbear:~ $ source .bashrc
+    rightbear@Rightbear:~ $ alias -p
+
+    alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
+    alias cl='clear'
+    alias egrep='egrep --color=auto'
+    alias et='exit'
+    alias fgrep='fgrep --color=auto'
+    alias grep='grep --color=auto'
+    alias l='ls -CF'
+    alias la='ls -A'
+    alias ll='ls -alF'
+    alias ls='ls --color=auto'
+    alias lshome='ls -ltr ~'
+    alias lstp='ls -ltr /tmp'
+    …
+    ```
+
 6. Test your installation script on a fresh virtual machine.
+
+    ## **Answer**
+    You can finish Practice 7 & 8 first before running this part
+
+    ### Demo1 (Test with ~/dotfiles)
+    ```console
+    connlabtest@missing-semester-test:~$ ls -lahtr
+    total 56K
+    -rw-r--r--  1 connlabtest connlabtest  807 Sep  6  2025 .profile
+    -rw-r--r--  1 connlabtest connlabtest 3.5K Sep  6  2025 .bashrc
+    -rw-r--r--  1 connlabtest connlabtest  220 Sep  6  2025 .bash_logout
+    drwxr-xr-x  3 root            root            4.0K Mar 17 03:59 ..
+    -rw-------  1 connlabtest connlabtest 7.1K Mar 18 09:18 .viminfo
+    -rw-------  1 connlabtest connlabtest   20 Mar 19 07:27 .lesshst
+    drwxr-xr-x 13 connlabtest connlabtest 4.0K Apr 30 09:35 mosh
+    -rw-------  1 connlabtest connlabtest 5.4K Apr 30 09:45 .bash_history
+    drwx------  2 connlabtest connlabtest 4.0K Jun 30 07:33 .ssh
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .bash_aliases
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .bash_profile
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .tmux.conf
+    drwxr-xr-x  6 connlabtest connlabtest 4.0K Jun 30 07:41 .
+    connlabtest@missing-semester-test:~$ git clone https://github.com/connlabtest-sys/dotfiles.git
+    Cloning into 'dotfiles'...
+    remote: Enumerating objects: 10, done.
+    remote: Counting objects: 100% (10/10), done.
+    remote: Compressing objects: 100% (8/8), done.
+    remote: Total 10 (delta 2), reused 10 (delta 2), pack-reused 0 (from 0)
+    Receiving objects: 100% (10/10), 4.57 KiB | 1.14 MiB/s, done.
+    Resolving deltas: 100% (2/2), done.
+    connlabtest@missing-semester-test:~$ ls dotfiles/
+    bash_aliases  bash_profile  bashrc  makesymlinks.sh  tmux.conf
+    connlabtest@missing-semester-test:~$ cd dotfiles/
+    connlabtest@missing-semester-test:~/dotfiles$ chmod +x makesymlinks.sh
+    connlabtest@missing-semester-test:~/dotfiles$ ./makesymlinks.sh
+    Creating /home/connlabtest/dotfiles_old for backup of any existing dotfiles in ~ ...done
+    Changing to the /home/connlabtest/dotfiles directory ...done
+    Moving any existing dotfiles from ~ to /home/connlabtest/dotfiles_old
+    Creating symlink to bash_aliases in home directory.
+    Moving any existing dotfiles from ~ to /home/connlabtest/dotfiles_old
+    Creating symlink to bash_profile in home directory.
+    Moving any existing dotfiles from ~ to /home/connlabtest/dotfiles_old
+    Creating symlink to bashrc in home directory.
+    Moving any existing dotfiles from ~ to /home/connlabtest/dotfiles_old
+    Creating symlink to tmux.conf in home directory.
+    connlabtest@missing-semester-test:~/dotfiles$ cd $HOME
+    connlabtest@missing-semester-test:~$ ls -lahtr
+    total 52K
+    -rw-r--r--  1 connlabtest connlabtest  807 Sep  6  2025 .profile
+    -rw-r--r--  1 connlabtest connlabtest  220 Sep  6  2025 .bash_logout
+    drwxr-xr-x  3 root            root            4.0K Mar 17 03:59 ..
+    -rw-------  1 connlabtest connlabtest 7.1K Mar 18 09:18 .viminfo
+    -rw-------  1 connlabtest connlabtest   20 Mar 19 07:27 .lesshst
+    drwxr-xr-x 13 connlabtest connlabtest 4.0K Apr 30 09:35 mosh
+    -rw-------  1 connlabtest connlabtest 5.4K Apr 30 09:45 .bash_history
+    drwx------  2 connlabtest connlabtest 4.0K Jun 30 07:33 .ssh
+    drwxr-xr-x  3 connlabtest connlabtest 4.0K Jun 30 07:34 dotfiles
+    lrwxrwxrwx  1 connlabtest connlabtest   43 Jun 30 07:43 .bash_aliases -> /home/connlabtest/dotfiles/bash_aliases
+    lrwxrwxrwx  1 connlabtest connlabtest   43 Jun 30 07:43 .bash_profile -> /home/connlabtest/dotfiles/bash_profile
+    drwxr-xr-x  2 connlabtest connlabtest 4.0K Jun 30 07:43 dotfiles_old
+    lrwxrwxrwx  1 connlabtest connlabtest   37 Jun 30 07:43 .bashrc -> /home/connlabtest/dotfiles/bashrc
+    lrwxrwxrwx  1 connlabtest connlabtest   40 Jun 30 07:43 .tmux.conf -> /home/connlabtest/dotfiles/tmux.conf
+    drwxr-xr-x  6 connlabtest connlabtest 4.0K Jun 30 07:43 .
+    connlabtest@missing-semester-test:~$ ls -a dotfiles_old
+    .  ..  .bash_aliases  .bash_profile  .bashrc  .tmux.conf
+    connlabtest@missing-semester-test:~$ source .bashrc
+    connlabtest@missing-semester-test:~ $ cd dotfiles
+    connlabtest@missing-semester-test:~/dotfiles (main *) $ cd $HOME
+    connlabtest@missing-semester-test:~ $ updateall
+    Get:1 file:/etc/apt/mirrors/debian.list Mirrorlist [30 B]
+    Get:3 file:/etc/apt/mirrors/debian-security.list Mirrorlist [39 B]                      
+    Hit:7 https://packages.cloud.google.com/apt google-compute-engine-bookworm-stable InRelease
+    Hit:2 https://deb.debian.org/debian bookworm InRelease       
+    Get:4 https://deb.debian.org/debian bookworm-updates InRelease [55.4 kB]
+    Get:5 https://deb.debian.org/debian bookworm-backports InRelease [59.4 kB]
+    Hit:6 https://deb.debian.org/debian-security bookworm-security InRelease
+    Hit:8 https://packages.cloud.google.com/apt cloud-sdk-bookworm InRelease
+    Fetched 115 kB in 1s (141 kB/s)
+    Reading package lists... Done
+    Building dependency tree... Done
+    Reading state information... Done
+    5 packages can be upgraded. Run 'apt list --upgradable' to see them.
+    ```
+
+    ### Demo2 (Test with ~/dotfiles_stow)
+    ```console
+    connlabtest@missing-semester-test:~$ ls -lahtr
+    total 48K
+    -rw-r--r--  1 connlabtest connlabtest  807 Sep  6  2025 .profile
+    -rw-r--r--  1 connlabtest connlabtest 3.5K Sep  6  2025 .bashrc
+    -rw-r--r--  1 connlabtest connlabtest  220 Sep  6  2025 .bash_logout
+    -rw-------  1 connlabtest connlabtest 7.1K Mar 18 09:18 .viminfo
+    drwxr-xr-x 13 connlabtest connlabtest 4.0K Apr 30 09:35 mosh
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .bash_aliases
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .bash_profile
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .tmux.conf
+    drwxr-xr-x  3 root            root            4.0K Jun 30 07:56 ..
+    -rw-------  1 connlabtest connlabtest   20 Jun 30 07:57 .lesshst
+    drwxr-xr-x  4 connlabtest connlabtest 4.0K Jun 30 07:57 .
+    -rw-------  1 connlabtest connlabtest 6.5K Jun 30 07:57 .bash_history
+    drwx------  2 connlabtest connlabtest 4.0K Jun 30 08:01 .ssh
+    connlabtest@missing-semester-test:~$ mv .bashrc .bashrc.bkp
+    connlabtest@missing-semester-test:~$ mv .bash_aliases .bash_aliases.bkp
+    connlabtest@missing-semester-test:~$ mv .bash_profile .bash_profile.bkp
+    connlabtest@missing-semester-test:~$ mv .tmux.conf .tmux.conf.bk
+    connlabtest@missing-semester-test:~$ git clone https://github.com/connlabtest-sys/dotfiles_stow.git
+    Cloning into 'dotfiles_stow'...
+    remote: Enumerating objects: 8, done.
+    remote: Counting objects: 100% (8/8), done.
+    remote: Compressing objects: 100% (6/6), done.
+    remote: Total 8 (delta 1), reused 8 (delta 1), pack-reused 0 (from 0)
+    Receiving objects: 100% (8/8), 4.11 KiB | 75.00 KiB/s, done.
+    Resolving deltas: 100% (1/1), done.
+    connlabtest@missing-semester-test:~$ cd dotfiles_stow
+    connlabtest@missing-semester-test:~/dotfiles_stow$ stow .
+    connlabtest@missing-semester-test:~/dotfiles_stow$ cd $HOME
+    connlabtest@missing-semester-test:~$ ls -lahtr
+    total 52K
+    -rw-r--r--  1 connlabtest connlabtest  807 Sep  6  2025 .profile
+    -rw-r--r--  1 connlabtest connlabtest 3.5K Sep  6  2025 .bashrc.bkp
+    -rw-r--r--  1 connlabtest connlabtest  220 Sep  6  2025 .bash_logout
+    -rw-------  1 connlabtest connlabtest 7.1K Mar 18 09:18 .viminfo
+    drwxr-xr-x 13 connlabtest connlabtest 4.0K Apr 30 09:35 mosh
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .bash_aliases.bkp
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .bash_profile.bkp
+    -rw-r--r--  1 connlabtest connlabtest    0 Jun 30 07:41 .tmux.conf.bkp
+    drwxr-xr-x  3 root            root            4.0K Jun 30 07:56 ..
+    -rw-------  1 connlabtest connlabtest   20 Jun 30 07:57 .lesshst
+    -rw-------  1 connlabtest connlabtest 6.5K Jun 30 07:57 .bash_history
+    drwx------  2 connlabtest connlabtest 4.0K Jun 30 08:01 .ssh
+    drwxr-xr-x  3 connlabtest connlabtest 4.0K Jun 30 08:05 dotfiles_stow
+    lrwxrwxrwx  1 connlabtest connlabtest   24 Jun 30 08:07 .tmux.conf -> dotfiles_stow/.tmux.conf
+    lrwxrwxrwx  1 connlabtest connlabtest   21 Jun 30 08:07 .bashrc -> dotfiles_stow/.bashrc
+    lrwxrwxrwx  1 connlabtest connlabtest   27 Jun 30 08:07 .bash_profile -> dotfiles_stow/.bash_profile
+    lrwxrwxrwx  1 connlabtest connlabtest   27 Jun 30 08:07 .bash_aliases -> dotfiles_stow/.bash_aliases
+    drwxr-xr-x  5 connlabtest connlabtest 4.0K Jun 30 08:07 .
+    connlabtest@missing-semester-test:~$ source .bashrc
+    -bash: zoxide: command not found
+    -bash: /home/connlabtest/.cargo/env: No such file or directory
+    -bash: fzf: command not found
+    connlabtest@missing-semester-test:~ $ cd dotfiles_stow/
+    connlabtest@missing-semester-test:~/dotfiles_stow (main) $ cd $HOME
+    connlabtest@missing-semester-test:~ $ updateall
+    Get:1 file:/etc/apt/mirrors/debian.list Mirrorlist [30 B]
+    Get:2 file:/etc/apt/mirrors/debian-security.list Mirrorlist [39 B]
+    Hit:3 https://deb.debian.org/debian bookworm InRelease        
+    Hit:4 https://deb.debian.org/debian bookworm-updates InRelease
+    Hit:5 https://deb.debian.org/debian bookworm-backports InRelease
+    Hit:7 https://packages.cloud.google.com/apt google-compute-engine-bookworm-stable InRelease
+    Hit:6 https://deb.debian.org/debian-security bookworm-security InRelease
+    Hit:8 https://packages.cloud.google.com/apt cloud-sdk-bookworm InRelease
+    Reading package lists... Done
+    Building dependency tree... Done
+    Reading state information... Done
+    5 packages can be upgraded. Run 'apt list --upgradable' to see them.
+    ```
 
 7. Migrate all of your current tool configurations to your dotfiles repository.
 
+    ## **Answer**
+    ### Demo1 (Test with ~/dotfiles)
+    ```console
+    rightbear@Rightbear:~ $ cp ~/.tmux.conf ~/dotfiles/tmux.conf
+    rightbear@Rightbear:~ $ cp ~/.bashrc ~/dotfiles/bashrc
+    rightbear@Rightbear:~ $ cp ~/.bash_profile ~/dotfiles/bash_profile
+    rightbear@Rightbear:~ $ ls ~/dotfiles
+    bash_aliases  bash_profile  bashrc  makesymlinks.sh  tmux.conf
+    rightbear@Rightbear:~ $ cd ~/dotfiles
+    rightbear@Rightbear:~/dotfiles (master %) $ vim makesymlinks.sh
+    rightbear@Rightbear:~/dotfiles (master *%) $ git diff
+    diff --git a/makesymlinks.sh b/makesymlinks.sh
+    index b560a04..673e655 100644
+    --- a/makesymlinks.sh
+    +++ b/makesymlinks.sh
+    @@ -11,7 +11,7 @@
+
+    dir=~/dotfiles                    # dotfiles directory
+    olddir=~/dotfiles_old             # old dotfiles backup directory
+    -files="bash_aliases"    # list of files/folders to symlink in homedir
+    +files="bash_aliases bash_profile bashrc tmux.conf"    # list of files/folders to symlink in homedir
+
+    ##########
+
+    rightbear@Rightbear:~/dotfiles (master *%) $ git add .
+    rightbear@Rightbear:~/dotfiles (master +) $ git commit -m "Migrate all of the current tool configurations"
+    [master a32e054] Migrate all of the current tool configurations
+    4 files changed, 403 insertions(+), 1 deletion(-)
+    create mode 100644 bash_profile
+    create mode 100644 bashrc
+    create mode 100644 tmux.conf
+    rightbear@Rightbear:~/dotfiles (master) $ git log
+    commit a32e054b88608b410fd4cee8eadeaa338963cce0 (HEAD -> master)
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Tue Jun 30 14:30:40 2026 +0800
+
+        Migrate all of the current tool configurations
+
+    commit 30008b1ea832b48b129edb0dd4c68a55bf672204
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Mon Jun 29 15:40:07 2026 +0800
+
+        My first Git commit of my dotfiles
+
+    ```
+
+    ### Demo2 (Test with ~/dotfiles_stow)
+    ```console
+    rightbear@Rightbear:~ $ cp ~/.tmux.conf ~/dotfiles_stow/.tmux.conf
+    rightbear@Rightbear:~ $ cp ~/.bashrc ~/dotfiles_stow/.bashrc
+    rightbear@Rightbear:~ $ cp ~/.bash_profile ~/dotfiles_stow/.bash_profile
+    rightbear@Rightbear:~ $ ls -a ~/dotfiles_stow/
+    .  ..  .bash_aliases  .bash_profile  .bashrc  .git  .tmux.conf
+    rightbear@Rightbear:~ $ cd ~/dotfiles_stow/
+    rightbear@Rightbear:~/dotfiles_stow (master %) $ git add .
+    rightbear@Rightbear:~/dotfiles_stow (master +) $ git commit -m "Migrate all of the current tool configurations with GNU Stow"
+    [master b6ece49] Migrate all of the current tool configurations with GNU Stow
+    3 files changed, 402 insertions(+)
+    create mode 100644 .bash_profile
+    create mode 100644 .bashrc
+    create mode 100644 .tmux.conf
+    rightbear@Rightbear:~/dotfiles_stow (master) $ git log
+    commit b6ece49ac51e6653933117a5f1c01f995b0ee85b (HEAD -> master)
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Tue Jun 30 14:40:43 2026 +0800
+
+        Migrate all of the current tool configurations with GNU Stow
+
+    commit 8a9d0c3908b30fa4188301336d661c76751045b0
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Tue Jun 30 13:48:53 2026 +0800
+
+        My first Git commit of my dotfiles with GNU Stow
+
+    ```
+
 8. Publish your dotfiles on GitHub.
+
+    ## **Answer**
+    ### Demo1 (Test with ~/dotfiles)
+    ```console
+    rightbear@Rightbear:~ $ cd dotfiles
+    rightbear@Rightbear:~/dotfiles (master) $ git remote add origin git@github.com:connlabtest-sys/dotfiles.git
+    rightbear@Rightbear:~/dotfiles (master) $ git branch -M main
+    rightbear@Rightbear:~/dotfiles (main) $ git push -u origin main
+    Enumerating objects: 10, done.
+    Counting objects: 100% (10/10), done.
+    Delta compression using up to 12 threads
+    Compressing objects: 100% (10/10), done.
+    Writing objects: 100% (10/10), 4.57 KiB | 780.00 KiB/s, done.
+    Total 10 (delta 2), reused 0 (delta 0), pack-reused 0
+    remote: Resolving deltas: 100% (2/2), done.
+    To github.com:connlabtest-sys/dotfiles.git
+    * [new branch]      main -> main
+    branch 'main' set up to track 'origin/main'.
+    rightbear@Rightbear:~/dotfiles (main) $ git log
+    commit a32e054b88608b410fd4cee8eadeaa338963cce0 (HEAD -> main, origin/main)
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Tue Jun 30 14:30:40 2026 +0800
+
+        Migrate all of the current tool configurations
+
+    commit 30008b1ea832b48b129edb0dd4c68a55bf672204
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Mon Jun 29 15:40:07 2026 +0800
+
+        My first Git commit of my dotfiles
+
+    ```
+
+    ### Demo2 (Test with ~/dotfiles_stow)
+    ```console
+    rightbear@Rightbear:~ $ cd dotfiles_stow/
+    rightbear@Rightbear:~/dotfiles_stow (master) $ git remote add origin git@github.com:connlabtest-sys/dotfiles_stow.git
+    rightbear@Rightbear:~/dotfiles_stow (master) $ git branch -M main
+    rightbear@Rightbear:~/dotfiles_stow (main) $ git push -u origin main
+    Enumerating objects: 8, done.
+    Counting objects: 100% (8/8), done.
+    Delta compression using up to 12 threads
+    Compressing objects: 100% (7/7), done.
+    Writing objects: 100% (8/8), 4.11 KiB | 2.05 MiB/s, done.
+    Total 8 (delta 1), reused 0 (delta 0), pack-reused 0
+    remote: Resolving deltas: 100% (1/1), done.
+    To github.com:connlabtest-sys/dotfiles_stow.git
+    * [new branch]      main -> main
+    branch 'main' set up to track 'origin/main'.
+    rightbear@Rightbear:~/dotfiles_stow (main) $ git log
+    commit b6ece49ac51e6653933117a5f1c01f995b0ee85b (HEAD -> main, origin/main)
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Tue Jun 30 14:40:43 2026 +0800
+
+        Migrate all of the current tool configurations with GNU Stow
+
+    commit 8a9d0c3908b30fa4188301336d661c76751045b0
+    Author: connlabtest <connlabtest@gmail.com>
+    Date:   Tue Jun 30 13:48:53 2026 +0800
+
+        My first Git commit of my dotfiles with GNU Stow
+
+    ```
 
 ## Remote Machines (SSH)
 

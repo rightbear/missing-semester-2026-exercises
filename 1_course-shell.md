@@ -198,7 +198,7 @@ We have not written solutions for the exercises. If you are stuck on anything in
     ### Explanation
     `set -x` will print commands and their arguments as they are executed.
 
-    ### Script (testset.sh)
+    ### Script file (testset.sh)
     ```bash
     #!/bin/bash
 
