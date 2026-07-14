@@ -753,7 +753,7 @@
     Setting up stow (2.3.1-1) ...
     Processing triggers for man-db (2.12.0-4build2) ...
     Processing triggers for install-info (7.1-3build2) …
-    rightbear@Rightbear:~$ cat ~/.bash_aliases
+    rightbear@Rightbear:~ $ cat ~/.bash_aliases
     alias cl="clear"
     alias lstp="ls -ltr /tmp"
     alias showbrc="cat .bashrc"
@@ -765,7 +765,7 @@
     alias et="exit"
     alias updateall="sudo apt update -y"
     rightbear@Rightbear:~ $ mkdir dotfiles_stow
-    rightbear@Rightbear:~$ cp ~/.bash_aliases ~/dotfiles_stow/.bash_aliases
+    rightbear@Rightbear:~ $ cp ~/.bash_aliases ~/dotfiles_stow/.bash_aliases
     rightbear@Rightbear:~ $ ls -a ~/dotfiles_stow
     .  ..  .bash_aliases  .git
     rightbear@Rightbear:~ $ alias -p
@@ -803,7 +803,7 @@
 
     ```
 
-    ### Demo: Method 1 (Install dotfiles with GNU Stow)
+    ### Demo: Method 1 (Install dotfiles without `--adopt`)
     ```console
     rightbear@Rightbear:~/dotfiles_stow (master) $ mv ../.bash_aliases ../.bash_aliases.bkp
     rightbear@Rightbear:~/dotfiles_stow (master) $ exit
@@ -840,7 +840,7 @@
     …
     ```
 
-    ### Demo: Method 2 (Install dotfiles with GNU Stow)
+    ### Demo: Method 2 (Install dotfiles with `--adopt`)
     ```console
     rightbear@Rightbear:~/dotfiles_stow (master) $ rm ../.bash_aliases
     rightbear@Rightbear:~/dotfiles_stow (master) $ exit
@@ -881,7 +881,7 @@
 6. Test your installation script on a fresh virtual machine.
 
     ## **Answer**
-    You can finish Practice 7 & 8 first before running this part
+    You can finish Practice 7 & 8 first before running this part.
 
     ### Demo1 (Test with ~/dotfiles)
     ```console
@@ -1015,9 +1015,6 @@
     lrwxrwxrwx  1 connlabtest connlabtest   27 Jun 30 08:07 .bash_aliases -> dotfiles_stow/.bash_aliases
     drwxr-xr-x  5 connlabtest connlabtest 4.0K Jun 30 08:07 .
     connlabtest@missing-semester-test:~$ source .bashrc
-    -bash: zoxide: command not found
-    -bash: /home/connlabtest/.cargo/env: No such file or directory
-    -bash: fzf: command not found
     connlabtest@missing-semester-test:~ $ cd dotfiles_stow/
     connlabtest@missing-semester-test:~/dotfiles_stow (main) $ cd $HOME
     connlabtest@missing-semester-test:~ $ updateall
@@ -1184,6 +1181,57 @@ Install a Linux virtual machine (or use an already existing one) for these exerc
 
 1. Go to `~/.ssh/` and check if you have a pair of SSH keys there. If not, generate them with `ssh-keygen -a 100 -t ed25519`. It is recommended that you use a password and use `ssh-agent`, more info [here](https://www.ssh.com/ssh/agent).
 
+    ## **Answer**
+    ### Demo
+    ```console
+    rightbear@Rightbear:~ $ cd .ssh
+    rightbear@Rightbear:~/.ssh $ ls -lahtr
+    total 12K
+    -rw-r--r-- 1 rightbear rightbear  142 Jun 30 07:33 known_hosts
+    drwx------ 2 rightbear rightbear 4.0K Jul  1 02:42 .
+    drwxr-xr-x 6 rightbear rightbear 4.0K Jul  1 02:53 ..
+    rightbear@Rightbear:~/.ssh $ ssh-keygen -a 100 -t ed25519
+    Generating public/private ed25519 key pair.
+    Enter file in which to save the key (/home/rightbear/.ssh/id_ed25519): 
+    Enter passphrase (empty for no passphrase): 
+    Enter same passphrase again: 
+    Your identification has been saved in /home/rightbear/.ssh/id_ed25519
+    Your public key has been saved in /home/rightbear/.ssh/id_ed25519.pub
+    The key fingerprint is:
+    SHA256:xf12CIk5txEA5ayADi58htwZTdAB2P8fZhfI24iRhXo rightbear@Rightbear
+    The key's randomart image is:
+    +--[ED25519 256]--+
+    |  oo+o. ooo..    |
+    | . .oo . = + o   |
+    |  ..o.o + X *    |
+    |o.oooo E = + = . |
+    |.+.=. o S + o + .|
+    | .o    o * o . . |
+    |        + o      |
+    |         .       |
+    |                 |
+    +----[SHA256]-----+
+
+    rightbear@Rightbear:~/.ssh $ ls -lahtr
+    total 20K
+    -rw-r--r-- 1 rightbear rightbear  142 Jun 30 07:33 known_hosts
+    drwxr-xr-x 6 rightbear rightbear 4.0K Jul  1 02:53 ..
+    -rw-r--r-- 1 rightbear rightbear  119 Jul  1 02:59 id_ed25519.pub
+    -rw------- 1 rightbear rightbear  484 Jul  1 02:59 id_ed25519
+    drwx------ 2 rightbear rightbear 4.0K Jul  1 02:59 .
+    rightbear@Rightbear:~/.ssh $ ssh-agent
+    SSH_AUTH_SOCK=/tmp/ssh-K6yAje1A6Kc0/agent.2237434; export SSH_AUTH_SOCK;
+    SSH_AGENT_PID=2237435; export SSH_AGENT_PID;
+    echo Agent pid 2237435;
+    rightbear@Rightbear:~/.ssh $ eval `ssh-agent`
+    Agent pid 2237452
+    rightbear@Rightbear:~/.ssh $ ssh-add
+    Enter passphrase for /home/rightbear/.ssh/id_ed25519: 
+    Identity added: /home/rightbear/.ssh/id_ed25519 (rightbear@Rightbear)
+    rightbear@Rightbear:~/.ssh $ ssh-add -l
+    256 SHA256:xf12CIk5txEA5ayADi58htwZTdAB2P8fZhfI24iRhXo rightbear@Rightbear (ED25519)
+    ```
+
 2. Edit `.ssh/config` to have an entry as follows:
 
     ```bash
@@ -1194,12 +1242,338 @@ Install a Linux virtual machine (or use an already existing one) for these exerc
         LocalForward 9999 localhost:8888
     ```
 
+    ## **Answer**
+    ### Configuration file (~/.ssh/config)
+    ```bash
+    Host missing-semester-test
+        User connlabtest
+        HostName 35.212.166.196
+        IdentityFile ~/.ssh/id_ed25519
+        LocalForward 9999 localhost:8888
+    ```
+
+    ### Demo
+    ```console
+    rightbear@Rightbear:~ $ vim .ssh/config
+    ```
+
 3. Use `ssh-copy-id vm` to copy your ssh key to the server.
+
+    ## **Answer**
+    The password you set in SSH Server should be the same as the password you input in SSH Client.
+
+    ### Demo1 (SSH Server)
+    ```console
+    connlabtest@missing-semester-test:~/.ssh $ sudo passwd connlabtest
+    New password: 
+    Retype new password: 
+    passwd: password updated successfully
+    connlabtest@missing-semester-test:~ $ cd $HOME
+    connlabtest@missing-semester-test:~ $ ls -a
+    .              .bash_aliases.bkp  .bash_profile      .bashrc.bkp  .ssh            .viminfo      mosh
+    ..             .bash_history      .bash_profile.bkp  .lesshst     .tmux.conf      dotfiles
+    .bash_aliases  .bash_logout       .bashrc            .profile     .tmux.conf.bkp  dotfiles_old
+    ```
+
+    ### Demo2 (SSH Client)
+    ```console
+    rightbear@Rightbear:~ $ ssh-copy-id missing-semester-test
+    /usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/home/rightbear/.ssh/id_ed25519.pub"
+    /usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
+    /usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
+    connlabtest@35.212.166.196's password:
+
+    Number of key(s) added: 1
+
+    Now try logging into the machine, with:   "ssh 'missing-semester-test'"
+    and check to make sure that only the key(s) you wanted were added.
+
+    rightbear@Rightbear:~ $ ssh missing-semester-test
+    Linux missing-semester-test 6.1.0-43-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.162-1 (2026-02-08) x86_64
+
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
+    individual files in /usr/share/doc/*/copyright.
+
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    permitted by applicable law.
+    Last login: Wed Jul  1 02:39:35 2026 from 35.235.240.144
+    connlabtest@missing-semester-test:~ $ ls -a
+    .              .bash_aliases.bkp  .bash_profile      .bashrc.bkp  .ssh            .viminfo      mosh
+    ..             .bash_history      .bash_profile.bkp  .lesshst     .tmux.conf      dotfiles
+    .bash_aliases  .bash_logout       .bashrc            .profile     .tmux.conf.bkp  dotfiles_old
+    ```
 
 4. Start a webserver in your VM by executing `python -m http.server 8888`. Access the VM webserver by navigating to `http://localhost:9999` in your machine.
 
+    ## **Answer**
+    ### Demo1 (SSH Server)
+    ```console
+    connlabtest@missing-semester-test:~ $ alias python=python3
+    connlabtest@missing-semester-test:~ $ python -m http.server 8888
+    Serving HTTP on 0.0.0.0 port 8888 (http://0.0.0.0:8888/) ...
+    ```
+    
+    ### Demo2 (SSH Client Terminal 1)
+    Launch the first terminal of SSH Client to build a SSH connection with SSH Server from SSH Client.
+    ```console
+    rightbear@Rightbear:~ $ ssh missing-semester-test
+    connlabtest@35.212.166.196's password:
+    Linux missing-semester-test 6.1.0-43-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.162-1 (2026-02-08) x86_64
+
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
+    individual files in /usr/share/doc/*/copyright.
+
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    permitted by applicable law.
+    Last login: Wed Jul  1 05:33:32 2026 from 39.12.129.116
+    connlabtest@missing-semester-test:~ $
+    ```
+
+    ### Demo3 (SSH Client Terminal 2)
+    Launch the second terminal of SSH Client to send HTTP requests from SSH Client to SSH Server.
+    ```console
+    rightbear@Rightbear:~ $ curl http://localhost:9999
+    <!DOCTYPE HTML>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <title>Directory listing for /</title>
+    </head>
+    <body>
+    <h1>Directory listing for /</h1>
+    <hr>
+    <ul>
+    <li><a href=".bash_aliases">.bash_aliases@</a></li>
+    <li><a href=".bash_aliases.bkp">.bash_aliases.bkp</a></li>
+    <li><a href=".bash_history">.bash_history</a></li>
+    <li><a href=".bash_logout">.bash_logout</a></li>
+    <li><a href=".bash_profile">.bash_profile@</a></li>
+    <li><a href=".bash_profile.bkp">.bash_profile.bkp</a></li>
+    <li><a href=".bashrc">.bashrc@</a></li>
+    <li><a href=".bashrc.bkp">.bashrc.bkp</a></li>
+    <li><a href=".lesshst">.lesshst</a></li>
+    <li><a href=".profile">.profile</a></li>
+    <li><a href=".ssh/">.ssh/</a></li>
+    <li><a href=".tmux.conf">.tmux.conf@</a></li>
+    <li><a href=".tmux.conf.bkp">.tmux.conf.bkp</a></li>
+    <li><a href=".viminfo">.viminfo</a></li>
+    <li><a href="dotfiles/">dotfiles/</a></li>
+    <li><a href="dotfiles_old/">dotfiles_old/</a></li>
+    <li><a href="mosh/">mosh/</a></li>
+    </ul>
+    <hr>
+    </body>
+    </html>
+    rightbear@Rightbear:~ $ curl -I http://localhost:9999
+    HTTP/1.0 200 OK
+    Server: SimpleHTTP/0.6 Python/3.11.2
+    Date: Wed, 01 Jul 2026 05:53:59 GMT
+    Content-type: text/html; charset=utf-8
+    Content-Length: 982
+
+    ```
+
+    ### Demo4 (SSH Server)
+    SSH Server will receive GET and HEAD results from SSH Client Terminal 2. The timestamp should be the same for the information of HTTP requests on both sides, which is `01/Jul/2026 05:42` here. 
+    ```console
+    connlabtest@missing-semester-test:~ $ python -m http.server 8888
+    Serving HTTP on 0.0.0.0 port 8888 (http://0.0.0.0:8888/) ...
+    127.0.0.1 - - [01/Jul/2026 05:53:48] "GET / HTTP/1.1" 200 -
+    127.0.0.1 - - [01/Jul/2026 05:53:59] "HEAD / HTTP/1.1" 200 - 
+    ```
+
 5. Edit your SSH server config by doing `sudo vim /etc/ssh/sshd_config` and disable password authentication by editing the value of `PasswordAuthentication`. Disable root login by editing the value of `PermitRootLogin`. Restart the `ssh` service with `sudo service sshd restart`. Try sshing in again.
+
+    ## **Answer**
+    ### Demo1 (SSH Server)
+    ```console
+    connlabtest@missing-semester-test:~ $ sudo vim /etc/ssh/sshd_config
+    …
+    # To disable tunneled clear text passwords, change to no here!
+    PasswordAuthentication no
+    #PermitEmptyPasswords no
+    …
+    # PAM authentication via KbdInteractiveAuthentication may bypass
+    PermitRootLogin no
+    # If you just want the PAM account and session checks to run without
+    # PAM authentication, then enable this but set PasswordAuthentication
+    # and KbdInteractiveAuthentication to 'no'.
+    …
+    connlabtest@missing-semester-test:~ $ sudo service sshd restart
+    ```
+
+    ### Demo2 (SSH Client)
+    ```console
+    rightbear@Rightbear:~ $ ssh missing-semester-test
+    connlabtest@35.212.166.196: Permission denied (publickey).
+    ```
 
 6. (Challenge) Install [`mosh`](https://mosh.org/) in the VM and establish a connection. Then disconnect the network adapter of the server/VM. Can mosh properly recover from it?
 
+    ## **Answer**
+    On the firewall of the Mosh server, make sure you open up UDP ports 60000-61000 for the ingress traffic.
+    
+    ### Demo1 (Mosh Server)
+    ```console
+    connlabtest@missing-semester-test:~ $ mosh-server
+
+
+    MOSH CONNECT 60001 Mg899P23wEouyjF+sia3Vg
+
+    mosh-server (mosh 1.4.0) [build mosh-1.4.0-39-gdecd9b7]
+    Copyright 2012 Keith Winstein <mosh-devel@mit.edu>
+    License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
+    This is free software: you are free to change and redistribute it.
+    There is NO WARRANTY, to the extent permitted by law.
+
+    [mosh-server detached, pid = 2241671]
+    ```
+
+    ### Demo2 (Mosh Client)
+    ```console
+    rightbear@Rightbear:~ $ mosh missing-semester-test
+    connlabtest@35.212.166.196's password:
+
+    Linux missing-semester-test 6.1.0-43-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.162-1 (2026-02-08) x86_64
+
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
+    individual files in /usr/share/doc/*/copyright.
+
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    permitted by applicable law.
+    connlabtest@missing-semester-test:~ $
+    ```
+
+    ### Demo3 (Mosh Server & Mosh Client)
+    Make the network interface on the Mosh Server side down for 15 seconds, then restart the network interface.
+    ```console
+    connlabtest@missing-semester-test:~ $ ip link
+    1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN mode DEFAULT group default qlen 1000
+        link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    2: ens4: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1460 qdisc mq state UP mode DEFAULT group default qlen 1000
+        link/ether 42:01:0a:8a:00:02 brd ff:ff:ff:ff:ff:ff
+        altname enp0s4
+    connlabtest@missing-semester-test:~ $ sudo ip link set ens4 down && sleep 15 && sudo ip link set ens4 up
+    ```
+
+    While the network interface on the Mosh server side is down for 15 seconds, the Mosh client will display a warning message and the time will keep increasing.
+    ```console
+    mosh: Last contact 15 seconds ago. [To quit: Ctrl-^ .]
+    x86_64
+
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
+    individual files in /usr/share/doc/*/copyright.
+
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    permitted by applicable law.
+    connlabtest@missing-semester-test:~ $
+    connlabtest@missing-semester-test:~ $ ls
+
+    ```
+
+    After the 15 seconds are up, the network interface on the Mosh server side will recover, and the warning message on the Mosh client side will disappear. Meanwhile, the connection between the Mosh server and client remains active throughout the process.
+    ```console
+    Linux missing-semester-test 6.1.0-43-cloud-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.1.162-1 (2026-02-08) x86_64
+
+    The programs included with the Debian GNU/Linux system are free software;
+    the exact distribution terms for each program are described in the
+    individual files in /usr/share/doc/*/copyright.
+
+    Debian GNU/Linux comes with ABSOLUTELY NO WARRANTY, to the extent
+    permitted by applicable law.
+    connlabtest@missing-semester-test:~ $
+    connlabtest@missing-semester-test:~ $ ls -a
+    .              .bash_aliases.bkp  .bash_profile      .bashrc.bkp  .ssh            .viminfo      mosh
+    ..             .bash_history      .bash_profile.bkp  .lesshst     .tmux.conf      dotfiles
+    .bash_aliases  .bash_logout       .bashrc            .profile     .tmux.conf.bkp  dotfiles_old
+    ```
+
 7. (Challenge) Look into what the `-N` and `-f` flags do in `ssh` and figure out a command to achieve background port forwarding.
+
+    ## **Answer**
+    ### Explanation
+    `-f` flag in ssh requests ssh to go to background just before command execution. This is useful if ssh is going to ask for passwords or passphrases, but the user wants it in the background. 
+    `-N` flag in ssh does not execute a remote command. This is useful for just forwarding ports.
+    The combination of two flags can make scenarios in Practice 4 of this chapter much simpler to test local port forwarding. When the flags are used together (e.g., `ssh -Nf` ...) , users can run the SSH forwarding task quietly in the background. Accordingly, the SSH Client side only needs to open one terminal to finish two tasks, which are connecting to the SSH Server side in the background and running the curl command to access the webserver.
+
+    ### Demo1 (SSH Server)
+    ```console
+    connlabtest@missing-semester-test:~ $ alias python=python3
+    connlabtest@missing-semester-test:~ $ python -m http.server 8888
+    Serving HTTP on 0.0.0.0 port 8888 (http://0.0.0.0:8888/) ...
+    ```
+
+    ### Demo2 (SSH Client)
+    Launch the terminal of SSH Client to build a SSH connection with SSH Server from SSH Client, then you can send HTTP requests from SSH Client to SSH Server. No need to switch to another terminal.
+    ```console
+    rightbear@Rightbear:~ $ ssh -Nf missing-semester-test
+    connlabtest@35.212.166.196's password:
+    rightbear@Rightbear:~ $ curl http://localhost:9999
+    <!DOCTYPE HTML>
+    <html lang="en">
+    <head>
+    <meta charset="utf-8">
+    <title>Directory listing for /</title>
+    </head>
+    <body>
+    <h1>Directory listing for /</h1>
+    <hr>
+    <ul>
+    <li><a href=".bash_aliases">.bash_aliases@</a></li>
+    <li><a href=".bash_aliases.bkp">.bash_aliases.bkp</a></li>
+    <li><a href=".bash_history">.bash_history</a></li>
+    <li><a href=".bash_logout">.bash_logout</a></li>
+    <li><a href=".bash_profile">.bash_profile@</a></li>
+    <li><a href=".bash_profile.bkp">.bash_profile.bkp</a></li>
+    <li><a href=".bashrc">.bashrc@</a></li>
+    <li><a href=".bashrc.bkp">.bashrc.bkp</a></li>
+    <li><a href=".lesshst">.lesshst</a></li>
+    <li><a href=".profile">.profile</a></li>
+    <li><a href=".ssh/">.ssh/</a></li>
+    <li><a href=".tmux.conf">.tmux.conf@</a></li>
+    <li><a href=".tmux.conf.bkp">.tmux.conf.bkp</a></li>
+    <li><a href=".viminfo">.viminfo</a></li>
+    <li><a href="dotfiles/">dotfiles/</a></li>
+    <li><a href="dotfiles_old/">dotfiles_old/</a></li>
+    <li><a href="mosh/">mosh/</a></li>
+    </ul>
+    <hr>
+    </body>
+    </html>
+    rightbear@Rightbear:~ $ curl -I http://localhost:9999
+    HTTP/1.0 200 OK
+    Server: SimpleHTTP/0.6 Python/3.11.2
+    Date: Thu, 02 Jul 2026 07:41:51 GMT
+    Content-type: text/html; charset=utf-8
+    Content-Length: 982
+
+    ```
+
+    ### Demo3 (SSH Server)
+    SSH Server will receive GET and HEAD results from SSH Client Terminal. The timestamp should be the same for the information of HTTP requests on both sides, which is `02/Jul/2026 07:41` here. 
+    ```console
+    connlabtest@missing-semester-test:~ $ python -m http.server 8888
+    Serving HTTP on 0.0.0.0 port 8888 (http://0.0.0.0:8888/) ...
+    127.0.0.1 - - [02/Jul/2026 07:41:35] "GET / HTTP/1.1" 200 -
+    127.0.0.1 - - [02/Jul/2026 07:41:51] "HEAD / HTTP/1.1" 200 -
+    ```
+
+    ### Demo4 (SSH Client)
+    If you want to kill the ssh connection built in the background, you can use `ps aux` and `kill` commands to kill the process.
+    ```console
+    rightbear@Rightbear:~ $
+    rightbear@Rightbear:~ $ ps aux | grep ssh
+    rightbear     2677  0.0  0.0   8436  2996 ?        Ss   05:30   0:00 ssh-agent
+    rightbear     2683  0.0  0.0   8304  1460 ?        Ss   05:30   0:00 ssh-agent
+    rightbear     7160  0.0  0.0  12016  5236 ?        Ss   15:39   0:00 ssh -Nf missing-semester-test
+    rightbear     7181 33.3  0.0   4088  1920 pts/0    S+   15:45   0:00 grep --color=auto ssh
+    rightbear@Rightbear:~ $ kill 7160
+    rightbear@Rightbear:~ $ ps aux | grep ssh
+    rightbear     2677  0.0  0.0   8436  2996 ?        Ss   05:30   0:00 ssh-agent
+    rightbear     2683  0.0  0.0   8304  1460 ?        Ss   05:30   0:00 ssh-agent
+    rightbear     7191  0.0  0.0   4088  1920 pts/0    S+   15:46   0:00 grep --color=auto ssh
+    ```
