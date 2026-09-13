@@ -741,18 +741,18 @@
     doc-base
     The following NEW packages will be installed:
     stow
-    0 upgraded, 1 newly installed, 0 to remove and 35 not upgraded.
+    0 upgraded, 1 newly installed, 0 to remove and 60 not upgraded.
     Need to get 380 kB of archives.
     After this operation, 865 kB of additional disk space will be used.
-    Get:1 https://arm.seli.gic.ericsson.se/artifactory/ubuntu-2rc/ubuntu noble/universe amd64 stow all 2.3.1-1 [380 kB]
-    Fetched 380 kB in 13s (29.8 kB/s)
+    Get:1 http://archive.ubuntu.com/ubuntu noble/universe amd64 stow all 2.3.1-1 [380 kB]
+    Fetched 380 kB in 2s (154 kB/s)
     Selecting previously unselected package stow.
-    (Reading database ... 95026 files and directories currently installed.)
+    (Reading database ... 46762 files and directories currently installed.)
     Preparing to unpack .../archives/stow_2.3.1-1_all.deb ...
     Unpacking stow (2.3.1-1) ...
     Setting up stow (2.3.1-1) ...
     Processing triggers for man-db (2.12.0-4build2) ...
-    Processing triggers for install-info (7.1-3build2) …
+    Processing triggers for install-info (7.1-3build2) ...
     rightbear@Rightbear:~ $ cat ~/.bash_aliases
     alias cl="clear"
     alias lstp="ls -ltr /tmp"
