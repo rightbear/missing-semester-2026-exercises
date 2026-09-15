@@ -136,8 +136,8 @@
     ```
 
     ### Debugging Strategy
-    For this task, the debugging tool used here is `gdb`. Then use breakpoints and step through the merge function to find where the incorrect element is being selected.
-    As seen in the demo below, when the merge function reaches the stage where `left_len=2` and `right_len=2` and `i=1`, `j=0`, the program actually writes `right[i]=4` to `result[1]` on line 22, but logically it should take `right[j]=1`. The two values are completely different, proving that the `else` branch of `merge()` accessed the wrong index (writing `j` as `i`). Continuing a few steps further (`next`) and looking at `result[k-1]`, we find that 4 is written instead of the expected 1, meaning the sorting result is corrupted.
+    For this task, the debugging tool used here is `gdb`. Then use breakpoints and step through the merge function to find where the incorrect element is being selected.  
+    As seen in the demo below, when the merge function reaches the stage where `left_len=2` and `right_len=2` and `i=1`, `j=0`, the program actually writes `right[i]=4` to `result[1]` on line 22, but logically it should take `right[j]=1`. The two values are completely different, proving that the `else` branch of `merge()` accessed the wrong index (writing `j` as `i`). Continuing a few steps further (`next`) and looking at `result[k-1]`, we find that 4 is written instead of the expected 1, meaning the sorting result is corrupted.  
     Finally, using `backtrace` to confirm which layer the recursive call triggered the merge, it was found that the merge was triggered when the outermost array with a length of 8 was switched to the layer with a length of 4, and the problem occurred.
 
     ### Demo2 (Debug Original Code)
@@ -395,10 +395,10 @@
     ```
 
     ### Debugging Strategy
-    For this task, the debugging tool used here is `rr` combined with `gdb`, following a "record → replay → reverse-execute" workflow to precisely pinpoint the exact line of code where the data was unexpectedly overwritten.
-    As seen in the demo below, after starting a fresh `rr` replay session, I let the program `continue` to completion first to observe its behavior, then used `list` to browse the source code and confirmed the `scores` array in the `students` struct only has 3 elements declared (`scores[0..2]`), yet the loop in `curve_scores` runs up to `i=3` — a clear sign of a potential out-of-bounds write. 
-    I set a breakpoint at line 40 and rerun the program, confirming that `students[1].id` had already become the incorrect value 1007 by this point — meaning the field had been overwritten at some earlier point in execution.
-    To find the actual write location, I set a hardware watchpoint on `students[1].id`. I reverse-executed the program with `reverse-continue`, letting it run backward from the current (corrupted) state until the value of this variable changed. The result showed that `students[1].id` was overwritten during the execution of line 24 inside `curve_scores` — but logically, this line should only be writing to `scores[i]`, not `id`! This confirmed my earlier suspicion from reading the source code: the loop boundary was off (`i` reached 3, but `scores` only has 3 slots), causing an out-of-bounds write that happened to overwrite the memory immediately following it — the `id` field.
+    For this task, the debugging tool used here is `rr` combined with `gdb`, following a "record $\rightarrow$ replay $\rightarrow$ reverse-execute" workflow to precisely pinpoint the exact line of code where the data was unexpectedly overwritten.  
+    As seen in the demo below, after starting a fresh `rr` replay session, I let the program `continue` to completion first to observe its behavior, then used `list` to browse the source code and confirmed the `scores` array in the `students` struct only has 3 elements declared (`scores[0..2]`), yet the loop in `curve_scores` runs up to `i=3` — a clear sign of a potential out-of-bounds write.  
+    I set a breakpoint at line 40 and rerun the program, confirming that `students[1].id` had already become the incorrect value 1007 by this point — meaning the field had been overwritten at some earlier point in execution.  
+    To find the actual write location, I set a hardware watchpoint on `students[1].id`. I reverse-executed the program with `reverse-continue`, letting it run backward from the current (corrupted) state until the value of this variable changed. The result showed that `students[1].id` was overwritten during the execution of line 24 inside `curve_scores` — but logically, this line should only be writing to `scores[i]`, not `id`! This confirmed my earlier suspicion from reading the source code: the loop boundary was off (`i` reached 3, but `scores` only has 3 slots), causing an out-of-bounds write that happened to overwrite the memory immediately following it — the `id` field.  
     Finally, using `backtrace` to confirm that the corrupting write was triggered from line 34 in `main()`, which calls `curve_scores(0, 5)`. In other words, while applying a grade curve to `student_idx=0`, the array out-of-bounds write inadvertently spread the corruption into `students[1].id`.
 
     ### Demo2 (Debug Original Code)
@@ -641,7 +641,7 @@
 
     ### Debugging Strategy
     AddressSanitizer detected a `heap-use-after-free` vulnerability.
-    The program frees dynamically allocated memory using `free(greeting)` and subsequently attempts to write to and read from that same deallocated address (`greeting[0] = 'J'` and `printf("%s\n", greeting);`).
+    The program frees dynamically allocated memory using `free(greeting)` and subsequently attempts to write to and read from that same deallocated address (`greeting[0] = 'J'` and `printf("%s\n", greeting);`).  
     To avoid the vulnerability, perform all modifications and reads while the buffer is valid, and call `free()` only when finished using the allocated memory.
 
     ### Modified Use after Free Code in C
@@ -684,8 +684,9 @@
     ## **Answer**
     ### Demo1 (`strace` command `ls -l`)
 
-    <details> 
+    <details>
     <summary>Click here to check the detailed output logs</summary>
+
     ```console
     rightbear@Rightbear:~ $ ls -l
     total 96
@@ -929,19 +930,24 @@
     exit_group(0)                           = ?
     +++ exited with 0 +++
     ```
+
     </details>
 
     ### Explanation1 (`strace` command `ls -l`)
-    The total system calls `ls -l` makes include: `access`, `arch_prctl`, `brk`, `close`, `connect`, `execve`, `exit_group`, `fstat`, `futex`, `getdents64`, `getrandom`, `ioctl`, `lgetxattr`, `listxattr`, `lseek`, `mmap`, `mprotect`, `munmap`, `newfstatat`, `openat`, `pread64`, `prlimit64`, `read`, `rseq`, `set_robust_list`, `set_tid_address`, `socket`, `statfs`, `statx`, `write`.
+    Running `strace ls -l` shows the full set of system calls the command makes:
+
+    `access`, `arch_prctl`, `brk`, `close`, `connect`, `execve`, `exit_group`, `fstat`, `futex`, `getdents64`, `getrandom`, `ioctl`, `lgetxattr`, `listxattr`, `lseek`, `mmap`, `mprotect`, `munmap`, `newfstatat`, `openat`, `pread64`, `prlimit64`, `read`, `rseq`, `set_robust_list`, `set_tid_address`, `socket`, `statfs`, `statx`, `write`
 
     The result can break down into a handful of clear phases:
-    1. Program startup
+
+    #### 1. Program startup
     ```console
     execve("/usr/bin/ls", ["ls", "-l"], 0x7fff9e494c50 /* 33 vars */) = 0
     …
     ```
     This is the very first syscall. It's how the process comes into existence.
-    2. Dynamic linking shared library loading 
+
+    #### 2. Dynamic linking shared library loading 
     ```console
     …
     openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
@@ -956,7 +962,8 @@
     ```
     A long sequence of `openat`, `read`, `fstat`, `mmap`, and `close` calls, one cluster per shared library which `ls` depends on includes: `/etc/ld.so.cache` (the linker's index of where libraries live), `libselinux.so.1`, `libc.so.6`, `libpcre2-8.so.0`.
     Each library is opened via `openat`, its ELF header read via `read`, its size retrieved using `fstat`, mapped into memory with `mmap`, and then closed. This is the OS/loader setting up the process's address space. 
-    3. Thread-local storage / process setup
+
+    #### 3. Thread-local storage / process setup
     ```console
     …
     arch_prctl(ARCH_SET_FS, 0x7c4b288cb800) = 0
@@ -969,7 +976,8 @@
     …
     ```
     A sequence of  `arch_prctl`, `set_tid_address`, `set_robust_list`, `rseq`, `mprotect` (locking down memory permissions after relocation), `prlimit64` (checking stack limits).
-    4. Locale handling
+
+    #### 4. Locale handling
     ```console
     …
     openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_IDENTIFICATION", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
@@ -980,7 +988,8 @@
     …
     ```
     A big batch of `openat` calls to `/usr/lib/locale/C.utf8/LC_*`. `ls` is loading locale data (collation, formatting, etc.) so it can sort and display things correctly. Notice most of the `C.UTF-8` variants fail with `ENOENT` and it falls back to `C.utf8` which is the example of trial-and-error path lookups.
-    5. The actual "ls" work 
+
+    #### 5. The actual "ls" work
     ```console
     …
     openat(AT_FDCWD, ".", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3
@@ -991,7 +1000,8 @@
     …
     ```
     For every file in the directory, `ls -l` opens the current directory. Then `ls -l` reads directory entries and calls `statx` + `lgetxattr` + `listxattr` to get the permissions, owner, size, timestamp, and any extended attributes needed for the long-format listing.
-    6. User/group name resolution
+
+    #### 6. User/group name resolution
     ```console
     …
     connect(4, {sa_family=AF_UNIX, sun_path="/var/run/nscd/socket"}, 110) = -1 ENOENT (No such file or directory)
@@ -1002,12 +1012,14 @@
     …
     ```
     `ls -l` shows usernames like `rightbear` instead of raw UID numbers, so it has to resolve UID/GID to name via NSS, first trying the name-service cache daemon (not running here) and falling back to reading `/etc/passwd` and `/etc/group` directly.
-    7. Timezone lookup
+
+    #### 7. Timezone lookup
     ```console
     openat(AT_FDCWD, "/etc/localtime", O_RDONLY|O_CLOEXEC) = 3
     ```
     Needed to render file modification times in local time.
-    8. Output and exit
+
+    #### 8. Output and exit
     ```console
     write(1, "drwxr-xr-x  2 rightbear rightbear 40"..., 58drwxr-xr-x  2 rightbear rightbear 4096 Mar 23 10:39 Downloads
     ) = 58
@@ -1044,9 +1056,10 @@
     ```
 
     ### Demo2 (`strace` command `python3 helloWorld.py`)
-    <details> 
+    <details>
     <summary>Click here to check the detailed output logs</summary>
-    ```
+
+    ```console
     rightbear@Rightbear:~ $ python3 helloWorld.py
     {'hello': 'world'}
     rightbear@Rightbear:~ $ strace -f python3 helloWorld.py 2>&1
@@ -1814,17 +1827,20 @@
     exit_group(0)                           = ?
     +++ exited with 0 +++
     ```
+
     </details>
 
     ### Explanation2 (`strace` command `python3 helloWorld.py`)
     The result can break down into a handful of clear phases:
-    1. Program startup
+    
+    #### 1. Program startup
     ```console
     execve("/usr/bin/python3", ["python3", "helloWorld.py"], 0x7ffcd84a3b40 /* 31 vars */) = 0
     …
     ```
     The shell calls `execve` to replace the current process with the `python3` interpreter, passing `helloWorld.py` as an argument.
-    2. Dynamic library loading
+
+    #### 2. Dynamic library loading
     ```console
     …
     openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
@@ -1840,7 +1856,8 @@
     A long sequence of `openat`, `read`, `fstat`, `mmap`, and `close` calls, one cluster per shared library which the Python interpreter binary itself depends on includes: `libm.so.6`, `libz.so.1 `, `libexpat.so.1`, `libc.so.6.
     The loaded libraries are dependencies of the Python interpreter binary itself and have nothing to do with the original script's content (json, open).
     Each library is opened via `openat`, its ELF header read via `read`, its size retrieved using `fstat`, mapped into memory with `mmap`, and then closed. This is the OS/loader setting up the process's address space. 
-    3. Locale and character encoding setup
+
+    #### 3. Locale and character encoding setup
     ```console
     …
     openat(AT_FDCWD, "/usr/lib/locale/C.UTF-8/LC_CTYPE", O_RDONLY|O_CLOEXEC) = -1 ENOENT (No such file or directory)
@@ -1852,7 +1869,8 @@
     …
     ```
     Python needs to determine which locale and encoding (e.g. UTF-8) to use for string handling.
-    4. Python interpreter self-location
+
+    #### 4. Python interpreter self-location
     ```console
     …
     newfstatat(AT_FDCWD, "/home/rightbear/.cargo/bin/python3", 0x7fff09a9baf0, 0) = -1 ENOENT (No such file or directory)
@@ -1867,7 +1885,8 @@
     ```
     This long series of "not found" calls is actually the interpreter figuring out its own installation location and environment
     The interpreter walks candidate paths along `PATH` (`.cargo/bin`, `.nvm/`..., `/usr/local/sbin`, etc.), checks whether it's running inside a virtual environment (`pyvenv.cfg`), and whether module search paths are restricted via a `._pth` file. Most attempts fail (`ENOENT`) until it finally confirms the interpreter binary lives at `/usr/bin/python3.12`.
-    5. The module search chain triggered by `import json` 
+
+    #### 5. The module search chain triggered by `import json`
     ```console
     …
     newfstatat(AT_FDCWD, "/usr/bin/lib/python3.12/os.py", 0x7fff09a9b910, 0) = -1 ENOENT (No such file or directory)
@@ -1900,7 +1919,8 @@
     ```
     Python's `json` module actually relies on a C-implemented `_json` module under the hood for faster encoding/decoding. Here it's loaded as a shared library — `read` for the ELF header, `mmap` for memory mapping — using exactly the same mechanism as the library loading in Phase 2. 
     This whole sequence explains why `import json`, despite being a single line, pulls in a chain of dependencies: `re`, `copyreg`, `scanner`, `encoder`, `_json`, and more. 
-    6. The actual program logic executing
+
+    #### 6. The actual program logic executing
     ```console
     …
     openat(AT_FDCWD, "test_output.json", O_WRONLY|O_CREAT|O_TRUNC|O_CLOEXEC, 0666) = 3
@@ -1996,6 +2016,7 @@
 
     ### LLM Solution1 (`template_error.cpp` with compiler error)
     #### My Prompt
+    ```text
     I am debugging a C++ program.
 
     The compiler produced the following error: 
@@ -2011,19 +2032,22 @@
     2. Explain how template type deduction works in this example.
     3. Identify the exact line that causes the problem.
     4. Provide the smallest possible fix.
-    5. Do not change unrelated parts of the program. 
+    5. Do not change unrelated parts of the program.
+    ```
 
     #### LLM Replication
-    1. Root Cause
+    ##### 1. Root Cause
     The template function `find_max` deduces its return type `T` from the type contained in the input `std::vector<T>`. Because `names` is a `std::vector<std::string>`, the function returns a `std::string`. The compiler produces an error because you are trying to assign that returned `std::string` to a variable of type `int`.
-    2. Error Location
+
+    ##### 2. Error Location
     The error occurs on line 18:
     ```cpp
     int result = find_max(names);
     ```
     `find_max(names)` returns a `std::string` (`"Charlie"` lexicographically).
     `int result` expects an integer, and C++ cannot implicitly convert a `std::string` to an `int`.
-    3. Corrected Code
+
+    ##### 3. Corrected Code
     ```cpp
     #include <algorithm>
     #include <iostream>
@@ -2050,7 +2074,8 @@
         return 0;
     }
     ```
-    4. Why This Fixes the Error
+
+    ##### 4. Why This Fixes the Error
     Changing the variable type to `std::string` (or `auto`) aligns the destination type with the deduced return type of `find_max<std::string>`, allowing successful assignment without type mismatch. 
 
     ### Source Code 2 (`template_error.cpp` with strace error)
@@ -2109,6 +2134,7 @@
 
     ### LLM Solution 2 (`template_error.cpp` with strace error)
     #### My Prompt
+    ```text
     I fixed the original C++ compiler error, but now the program fails at runtime.
 
     Here is the relevant strace output: 
@@ -2122,41 +2148,39 @@
     4. Determine why the program cannot find config.txt.
     5. Suggest a minimal fix.
     6. Explain the difference between the process working directory and the directory containing the executable. 
+    ```
 
     #### LLM Replication
-    1. What This System Call Is Doing
+    ##### 1. What This System Call Is Doing
     `openat(AT_FDCWD, "config.txt", O_RDONLY)` requests that the Linux kernel open the file named `"config.txt"` in read-only mode (`O_RDONLY`). The flag `AT_FDCWD` instructs the kernel to resolve the relative path `"config.txt"` starting from the process's current working directory.
 
-    2. What `ENOENT` Means
+    ##### 2. What `ENOENT` Means
     `ENOENT` stands for "Error: NO ENTry" (specifically, no such directory entry). It means the kernel searched the target directory for a file or directory named `"config.txt"` and found nothing matching that name.
 
-    3. What Return Value `-1` Means
+    ##### 3. What Return Value `-1` Means
     In Linux/POSIX system calls, a return value of `-1` indicates that the operation failed. When a call fails, the kernel sets the global variable `errno` to a specific error constant (in this case, `ENOENT`) to describe why it failed. A successful `openat` call would return a non-negative integer representing a new file descriptor (e.g., `3`).
 
-    4. Why the Program Cannot Find `config.txt`
+    ##### 4. Why the Program Cannot Find `config.txt`
     The program uses a relative path (`"config.txt"`). The operating system resolves relative paths against the current working directory (CWD) where the command was executed in the shell, not where the compiled binary or source file is saved. If you ran `./path/to/template_error` from a directory that does not contain `config.txt`, the lookup fails.
 
-    5. Minimal Fix
+    ##### 5. Minimal Fix
     Ensure `config.txt` exists in the exact directory from which you execute the binary:
-        a. Option A (Create/Move the file):
-    Create or move `config.txt` into your current shell directory:
-    ```
+    - **Option A (Create/Move the file):** Create or move `config.txt` into your current shell directory:
+    ```console
     touch config.txt
     ```
-
-        b. Option B (Run from the file's folder):
-    `cd` into the folder containing `config.txt` before launching the executable:
-
-    ```
+    - **Option B (Run from the file's folder):** `cd` into the folder containing `config.txt` before launching the executable:
+    ```console
     cd /path/containing/config/ && ./template_error
     ```
-    6. Working Directory vs. Executable Directory
-        a. Current Working Directory (CWD):
-    The folder your shell is currently "in" when you run a command (what pwd outputs). Any relative path (like `"config.txt"` or `"data/log.txt"`) is resolved relative to this location.
-        b. Executable Directory:
-    The folder where the compiled binary file actually lives on disk (e.g., /usr/local/bin or ~/project/bin/).
 
-    Unless you explicitly inspect /proc/self/exe or std::filesystem::current_path(), an executable has no built-in awareness of its own directory when resolving relative file paths—it only looks at the caller's CWD.
+    ##### 6. Working Directory vs. Executable Directory
+    - **Current Working Directory (CWD):**
+    The folder your shell is currently "in" when you run a command (what pwd outputs). Any relative path (like `"config.txt"` or `"data/log.txt"`) is resolved relative to this location.
+    - **Executable Directory:**
+    The folder where the compiled binary file actually lives on disk (e.g., `/usr/local/bin` or `~/project/bin/`).
+
+    Unless you explicitly inspect `/proc/self/exe` or `std::filesystem::current_path()`, an executable has no built-in awareness of its own directory when resolving relative file paths—it only looks at the caller's CWD.
 
     ### Demo2.2 (`template_error.cpp` without strace error)
     ```console
@@ -2282,6 +2306,7 @@
 
     ### LLM Solution 3 (`template_error.cpp` with AddressSanitizer error)
     #### My Prompt
+    ```text
     I fixed the previous file-path problem.
 
     Here is the relevant output: 
@@ -2298,17 +2323,20 @@
     3. Explain why the loop condition is incorrect.
     4. Provide the minimal fix.
     5. Explain why AddressSanitizer was able to detect this bug.
+    ```
 
     #### LLM Replication
-    1. What Heap-Buffer-Overflow Means
+    ##### 1. What Heap-Buffer-Overflow Means
     A heap-buffer-overflow occurs when a program reads from or writes to dynamic memory (allocated via `malloc`, `calloc`, or `new[]` on the heap) outside the bounds of the allocated block.
-    2. Exact Invalid Memory Access
+
+    ##### 2. Exact Invalid Memory Access
     ASan caught a write at line 33 (or 65 in the earlier log):
-        a. Allocated region
+    - **Allocated region**
     20 bytes at `[0x503000000040, 0x503000000054)`. Because an `int` is 4 bytes, this corresponds to an array of size 5: `int* arr = new int[5];` (valid indices `0` to `4`, ending byte offset 19).
-        b. Attempted write
+    - **Attempted write**
     `WRITE of size 4 at 0x503000000054`. Byte `0x503000000054` is exactly 0 bytes after the end of the 20-byte region, corresponding to index 5 (arr[5]).
-    3. Why the Loop Condition Is Incorrect
+
+    ##### 3. Why the Loop Condition Is Incorrect
     The loop uses an off-by-one `<=` comparison rather than `<`:
     ```cpp
     // Buggy pattern:
@@ -2318,7 +2346,7 @@
     ```
     In C++, an array of size `N` only has valid indices from `0` through `N - 1`. Looping with `i <= N` attempts to write into the `(N+1)`-th element (`arr[N]`), which resides past the boundary of the allocated block.
 
-    Minimal Fix
+    ##### 4. Minimal Fix
     Change the loop condition from `<=` to `<`:
     ```cpp
     for (int i = 0; i < 5; ++i) {
@@ -2326,7 +2354,8 @@
     }
     ```
     (Or, in modern C++, replace raw dynamic arrays with `std::vector<int>` or `std::array<int`, 5> to eliminate manual memory management entirely).
-    5. Corrected Code
+
+    ##### 5. Corrected Code
     ```cpp
     #include <algorithm>
     #include <fstream>
@@ -2369,11 +2398,12 @@
         return 0;
     }
     ```
-    6. How AddressSanitizer Detected This Bug
+
+    ##### 6. How AddressSanitizer Detected This Bug
     AddressSanitizer (ASan) detects out-of-bounds accesses via two mechanisms:
-        a.Redzones
+    - **Redzones**
     When dynamic memory is allocated, ASan injects poisoned, non-addressable buffer regions ("redzones") immediately before and after the requested block (indicated by fa in the shadow byte dump).
-        b. Shadow Memory & Compile-Time Instrumentation
+    - **Shadow Memory & Compile-Time Instrumentation**
     ASan maps 1 byte of "shadow memory" to track the validity of every 8 bytes of application memory. At compile time, ASan instruments every memory read/write with a fast bitwise check against the corresponding shadow byte.
     When the loop wrote to `arr[5]` at `0x503000000054`, the pointer reached the right redzone (`fa`), triggering an instant fault and printing the report before corrupted memory could silently alter application behavior.
 
@@ -2385,4 +2415,404 @@
     rightbear@Rightbear:~ $ g++ -fsanitize=address -g template_error.cpp -o template_error
     rightbear@Rightbear:~ $ ./template_error
     Longest name: Charlie
+    ```
+
+## Profiling
+
+1. Use `perf stat` to get basic performance statistics for a program of your choice. What do the different counters mean?
+
+    ## **Answer**
+    The source code(`merge_sort.c`) of the program we used here is from Practice 1 in Debugging section.
+
+    ### Demo
+    ```console
+    debuglabtest@missing-semester-test:~ $ gcc merge_sort.c -o merge_sort
+    debuglabtest@missing-semester-test:~ $ perf stat ./merge_sort
+    Result of merge sort: 1 1 2 3 4 5 6 9
+
+     Performance counter stats for './merge_sort':
+
+                     0      context-switches                 #      0.0 cs/sec  cs_per_second
+                     0      cpu-migrations                   #      0.0 migrations/sec  migrations_per_second
+                    59      page-faults                      # 184046.6 faults/sec  page_faults_per_second
+                  0.32 msec task-clock                       #      0.0 CPUs  CPUs_utilized
+                 6,612      branch-misses                    #      4.3 %  branch_miss_rate         (82.53%)
+               150,483      branches                         #    469.4 M/sec  branch_frequency
+             1,025,679      cpu-cycles                       #      3.2 GHz  cycles_frequency
+               784,365      instructions                     #      0.8 instructions  insn_per_cycle
+
+           0.000859144 seconds time elapsed
+
+           0.000000000 seconds user
+           0.000964000 seconds sys
+
+    ```
+
+    ### Explanation
+    Here is what each counter and metric in `perf stat` output measures:
+
+    #### 1. Software & OS Events
+    - **`context-switches` (0)**
+    The number of times the operating system paused this program to let another process run (or waited on I/O). It is 0 because the sort case was tiny and finished inside a single CPU scheduling time slice.
+    - **`cpu-migrations` (0)**
+    The number of times the OS scheduler moved the running process from one physical/logical CPU core to another. 0 means it ran its entire life on the same core.
+    - **`page-faults` (59)**
+    Occurs when the program accesses a virtual memory address that is not yet mapped into physical RAM (almost entirely minor page faults from loading the binary, C runtime/libc, and setting up the initial stack and heap).
+    - **`task-clock` (0.32 msec)**
+    The total actual time the CPU spent actively executing this program's code and its system calls.
+
+    #### 2. Hardware Execution & Pipeline Metrics
+    - **`branches` (150,483)**
+    The total number of branching instructions (such as `if/else` comparisons, `while/for` loops, and function calls/returns) encountered during execution.
+    - **`branch-misses` (6,612 / 4.3%)**
+    How often the CPU's branch predictor guessed incorrectly. Merge sort contains data-dependent branching when comparing elements (`left[i] <= right[j]`), which causes pipeline flushes whenever predictions fail.
+    The `(82.53%)` next to it means hardware counter multiplexing occurred; because there were fewer PMU registers than requested hardware events, this counter was active for ~82.5% of the total runtime and extrapolated.
+    - **`cpu-cycles` (1,025,679 / ~3.2 GHz)**
+    Total clock ticks consumed by the processor while running the workload. Dividing this by `task-clock` gives your CPU's actual operating frequency (~3.2 GHz).
+    - **`instructions` (784,365)**
+    The raw count of CPU instructions completed (retired). The `(0.8 instructions insn_per_cycle)` next to it means 0.8 IPC and indicates pipeline stalls (waiting on memory loads, setup overhead, or recovering from branch mispredictions). A modern superscalar CPU can ideally execute 3 to 4+ instructions per cycle.
+
+    #### 3. Timing Breakdown
+    - **`time elapsed` (0.00086 s)**
+    Total wall-clock time from launch to termination.
+    - **`user` (0.00000 s)**
+    Time spent executing pure user-space application code (rounded below microsecond precision here).
+    - **`sys` (0.00096 s)**
+    Time spent running Linux kernel code on behalf of the process (program loading, allocating memory pages, dynamic linker setup, and standard I/O prints).
+
+2. Profile with `perf record`. Save this as `slow.c`:
+
+    ```c
+    #include <math.h>
+    #include <stdio.h>
+
+    double slow_computation(int n) {
+        double result = 0;
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < 1000; j++) {
+                result += sin(i * j) * cos(i + j);
+            }
+        }
+        return result;
+    }
+
+    int main() {
+        double r = 0;
+        for (int i = 0; i < 100; i++) {
+            r += slow_computation(1000);
+        }
+        printf("Result: %f\n", r);
+        return 0;
+    }
+    ```
+
+    Compile with debug symbols: `gcc -g -O2 slow.c -o slow -lm`. Run `perf record -g ./slow`, then `perf report` to see where time is spent. Try generating a flame graph using the flamegraph scripts.
+
+    ## **Answer**
+    ### Demo1 (Retrieve the result of `perf report`)
+    ```console
+    debuglabtest@missing-semester-test:~ $ gcc -g -O2 slow.c -o slow -lm
+    debuglabtest@missing-semester-test:~ $ perf record -g ./slow
+    Result: -122140.186478
+    [ perf record: Woken up 4 times to write data ]
+    [ perf record: Captured and wrote 0.806 MB perf.data (11557 samples) ]
+    debuglabtest@missing-semester-test:~ $ perf report
+    ```
+
+    ### Result of `perf report`
+    <details>
+    <summary>Click here to check the detailed output logs</summary>
+
+    ```console
+    Samples: 11K of event 'cpu/cycles/P', Event count (approx.): 11451027712
+      Children      Self  Command  Shared Object         Symbol
+    +   96.23%     8.28%  slow     slow                  [.] main                                                          
+    +   95.46%     0.00%  slow     slow                  [.] slow_computation (inlined)                                    
+    +   48.47%    48.11%  slow     libm.so.6             [.] __cos_fma                                                     
+    +   42.30%    40.98%  slow     libm.so.6             [.] __sin_fma                                                     
+    +   31.09%     0.00%  slow     libm.so.6             [.] do_sincos (inlined)                                           
+    +   28.12%     0.00%  slow     libm.so.6             [.] do_sincos (inlined)                                           
+    +   15.13%     0.00%  slow     libm.so.6             [.] do_sin (inlined)                                              
+    +   14.90%     0.00%  slow     libm.so.6             [.] do_sin (inlined)                                              
+    +   12.36%     0.00%  slow     libm.so.6             [.] do_cos (inlined)                                              
+    +    9.59%     0.00%  slow     libm.so.6             [.] do_cos (inlined)                                              
+    +    7.06%     0.00%  slow     libm.so.6             [.] reduce_sincos (inlined)                                       
+    +    5.84%     0.00%  slow     libm.so.6             [.] reduce_sincos (inlined)                                       
+    +    3.46%     0.00%  slow     libm.so.6             [.] libc_feholdsetround_sse_ctx (inlined)                         
+    +    1.85%     0.00%  slow     libm.so.6             [.] libc_feholdsetround_sse_ctx (inlined)                         
+    +    1.77%     1.00%  slow     slow                  [.] sin@plt                                                       
+    +    1.01%     1.01%  slow     slow                  [.] cos@plt                                                       
+    +    0.67%     0.02%  slow     [kernel.kallsyms]     [.] asm_sysvec_apic_timer_interrupt                               
+    +    0.55%     0.01%  slow     [kernel.kallsyms]     [.] sysvec_apic_timer_interrupt                                   
+         0.36%     0.00%  slow     [kernel.kallsyms]     [.] __sysvec_apic_timer_interrupt                                 
+         0.36%     0.01%  slow     [kernel.kallsyms]     [.] hrtimer_interrupt                                             
+         0.32%     0.02%  slow     [kernel.kallsyms]     [.] __hrtimer_run_queues                                          
+         0.29%     0.00%  slow     [kernel.kallsyms]     [.] tick_nohz_handler                                             
+         0.25%     0.00%  slow     libm.so.6             [.] libc_feresetround_sse_ctx (inlined)                           
+         0.22%     0.00%  slow     [kernel.kallsyms]     [.] update_process_times                                          
+         0.19%     0.01%  slow     [kernel.kallsyms]     [.] sched_tick
+         0.16%     0.00%  slow     libm.so.6             [.] libc_feresetround_sse_ctx (inlined)                                                               
+         0.16%     0.01%  slow     [kernel.kallsyms]     [.] irq_exit_rcu                                                                                      
+         0.13%     0.00%  slow     [kernel.kallsyms]     [.] __irq_exit_rcu                                                                                    
+         0.13%     0.00%  slow     [kernel.kallsyms]     [.] handle_softirqs                                                                                   
+         0.11%     0.02%  slow     [kernel.kallsyms]     [.] task_tick_fair                                                                                    
+         0.10%     0.00%  slow     [kernel.kallsyms]     [.] run_timer_softirq                                                                                 
+         0.10%     0.00%  slow     [kernel.kallsyms]     [.] tmigr_handle_remote                                                                               
+         0.10%     0.00%  slow     [kernel.kallsyms]     [.] tmigr_handle_remote_up                                                                            
+         0.10%     0.01%  slow     [kernel.kallsyms]     [k] __run_timers                                                                                      
+         0.09%     0.00%  slow     [kernel.kallsyms]     [.] call_timer_fn                                                                                     
+         0.09%     0.01%  slow     [kernel.kallsyms]     [.] tmigr_handle_remote_cpu                                                                           
+         0.08%     0.01%  slow     [kernel.kallsyms]     [.] fq_flush_timeout                                                                                  
+         0.08%     0.00%  slow     [kernel.kallsyms]     [.] timer_expire_remote                                                                               
+         0.06%     0.02%  slow     [kernel.kallsyms]     [.] qi_submit_sync                                                                                    
+         0.06%     0.00%  slow     [kernel.kallsyms]     [.] intel_flush_iotlb_all                                                                             
+         0.06%     0.00%  slow     [kernel.kallsyms]     [.] cache_tag_flush_all                                                                               
+         0.06%     0.00%  slow     [kernel.kallsyms]     [.] cache_tag_flush_range
+         0.06%     0.00%  slow     [kernel.kallsyms]     [.] qi_batch_flush_descs                                                                              
+         0.05%     0.01%  slow     [kernel.kallsyms]     [.] tick_do_update_jiffies64                                                                          
+         0.04%     0.04%  slow     [kernel.kallsyms]     [k] qi_check_fault                                                                                    
+         0.04%     0.04%  slow     [kernel.kallsyms]     [k] native_irq_return_iret                                                                            
+         0.04%     0.00%  slow     [kernel.kallsyms]     [.] update_curr                                                                                       
+         0.04%     0.01%  slow     [kernel.kallsyms]     [k] __timekeeping_advance                                                                             
+         0.04%     0.00%  slow     [kernel.kallsyms]     [.] update_wall_time                                                                                  
+         0.04%     0.01%  slow     [kernel.kallsyms]     [.] update_cfs_rq_load_avg                                                                            
+         0.03%     0.03%  slow     [kernel.kallsyms]     [k] __update_load_avg_cfs_rq                                                                          
+         0.03%     0.02%  slow     [kernel.kallsyms]     [.] timekeeping_adjust                                                                                
+         0.03%     0.03%  slow     [kernel.kallsyms]     [k] read_tsc                                                                                          
+         0.03%     0.03%  slow     [kernel.kallsyms]     [k] native_write_msr                                                                                  
+         0.03%     0.01%  slow     [kernel.kallsyms]     [k] arch_scale_freq_tick                                                                              
+         0.03%     0.03%  slow     [kernel.kallsyms]     [k] __update_load_avg_se                                                                              
+         0.03%     0.02%  slow     [kernel.kallsyms]     [k] update_deadline                                                                                   
+         0.02%     0.00%  slow     [kernel.kallsyms]     [.] sched_balance_softirq                                                                             
+         0.02%     0.02%  slow     [kernel.kallsyms]     [k] native_apic_msr_eoi                                                                               
+         0.02%     0.02%  slow     [kernel.kallsyms]     [k] account_user_time                                                                                 
+         0.02%     0.00%  slow     [kernel.kallsyms]     [.] account_process_tick                                                                              
+         0.02%     0.00%  slow     [kernel.kallsyms]     [.] perf_event_task_tick                                                                              
+         0.02%     0.00%  slow     [kernel.kallsyms]     [.] tick_program_event                                                                                
+         0.02%     0.00%  slow     [kernel.kallsyms]     [.] clockevents_program_event                                                                         
+         0.02%     0.02%  slow     [kernel.kallsyms]     [k] native_read_msr                                                                                   
+         0.02%     0.01%  slow     [kernel.kallsyms]     [k] sched_balance_trigger                                                                             
+         0.02%     0.02%  slow     [kernel.kallsyms]     [k] ktime_get_update_offsets_now                                                                      
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] raw_spin_rq_unlock                                                                                
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] pwq_tryinc_nr_active                                                                              
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] delayed_work_timer_fn                                                                             
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] __queue_work                                                                                      
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] __queue_work.part.0                                                                               
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] __raw_spin_lock_irqsave                                                                           
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] _raw_spin_lock_irqsave                                                                            
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] sched_balance_update_blocked_averages                                                             
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] __sched_balance_update_blocked_averages                                                           
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] rb_erase                                                                                          
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] should_we_balance                                                                                 
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] sched_balance_domains                                                                             
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] sched_balance_rq                                                                                  
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] call_function_single_prep_ipi
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] nohz_balancer_kick                                                                                
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] kick_ilb                                                                                          
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] smp_call_function_single_async                                                                    
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] generic_exec_single                                                                               
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] __smp_call_single_queue                                                                           
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] irqentry_exit                                                                                     
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] schedule                                                                                          
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] __schedule                                                                                        
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] pick_next_task                                                                                    
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] pick_next_task_fair                                                                               
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] set_next_entity                                                                                   
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] update_load_avg                                                                                   
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] perf_adjust_freq_unthr_context                                                                    
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] x86_pmu_enable                                                                                    
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] intel_pmu_enable_all                                                                              
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] calc_global_load                                                                                  
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] ntp_tick_length                                                                                   
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] __remove_hrtimer                                                                                  
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] dl_server_update                                                                                  
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] update_curr_dl_se                                                                                 
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] hrtimer_try_to_cancel                                                                             
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] hrtimer_try_to_cancel.part.0                                                                      
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] rcu_sched_clock_irq                                                                               
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] update_se                                                                                         
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] avg_vruntime                                                                                      
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] __rcu_read_lock                                                                                   
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] sync_regs                                                                                         
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] native_sched_clock                                                                                
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] update_rq_clock                                                                                   
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] sched_clock_cpu                                                                                   
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] sched_clock                                                                                       
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] sched_clock_noinstr                                                                               
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] sched_core_idle_cpu                                                                               
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] raw_notifier_call_chain                                                                           
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] try_to_wake_up                                                                                    
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] hrtimer_wakeup                                                                                    
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] wake_up_process                                                                                   
+         0.01%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_start_user                                                                                    
+         0.01%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_start                                                                                         
+         0.01%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_start_final (inlined)                                                                         
+         0.01%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_sysdep_start
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] asm_exc_page_fault                                                                                
+         0.01%     0.01%  slow     [kernel.kallsyms]     [k] filemap_map_pages                                                                                 
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] exc_page_fault                                                                                    
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] do_user_addr_fault                                                                                
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] handle_mm_fault                                                                                   
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] __handle_mm_fault                                                                                 
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] handle_pte_fault                                                                                  
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] do_fault                                                                                          
+         0.01%     0.00%  slow     [kernel.kallsyms]     [.] do_read_fault                                                                                     
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] dl_main                                                                                           
+         0.00%     0.00%  slow     libc.so.6             [.] __libc_early_init                                                                                 
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] strncmp                                                                                           
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_receive_error                                                                                 
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] set_catch (inlined)                                                                               
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] version_check_doit                                                                                
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_check_all_versions                                                                            
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] rtld_timer_accum (inlined)                                                                        
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] rtld_timer_stop (inlined)                                                                         
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_map_object_deps                                                                               
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_catch_exception                                                                               
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] set_catch (inlined)                                                                               
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] openaux                                                                                           
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_map_object                                                                                    
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] _dl_load_cache_lookup                                                                             
+         0.00%     0.00%  slow     [kernel.kallsyms]     [k] mas_next_slot                                                                                     
+         0.00%     0.00%  slow     [unknown]             [k] 0x00007012a44ef03b                                                                                
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] entry_SYSCALL_64_after_hwframe                                                                    
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] do_syscall_64                                                                                     
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] x64_sys_call                                                                                      
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] __x64_sys_execve                                                                                  
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] do_execveat_common.isra.0                                                                         
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] bprm_execve                                                                                       
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] bprm_execve.part.0                                                                                
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] exec_binprm                                                                                       
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] load_elf_binary                                                                                   
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] load_elf_interp.isra.0                                                                            
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] elf_load                                                                                          
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] vm_mmap     
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] vm_mmap_pgoff                                                                                     
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] do_mmap                                                                                           
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] __get_unmapped_area                                                                               
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] thp_get_unmapped_area                                                                             
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] thp_get_unmapped_area_vmflags                                                                     
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] mm_get_unmapped_area_vmflags                                                                      
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] arch_get_unmapped_area_topdown                                                                    
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] vm_unmapped_area                                                                                  
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] unmapped_area_topdown                                                                             
+         0.00%     0.00%  slow     ld-linux-x86-64.so.2  [.] _start                                                                                            
+         0.00%     0.00%  slow     [kernel.kallsyms]     [.] mas_find
+    ```
+
+    </details>
+
+    ### Demo2 (Retrieve flame graph using the flamegraph scripts)
+    ```console
+    debuglabtest@missing-semester-test:~ $ git clone https://github.com/brendangregg/FlameGraph.git
+    Cloning into 'FlameGraph'...
+    remote: Enumerating objects: 1291, done.
+    remote: Counting objects: 100% (747/747), done.
+    remote: Compressing objects: 100% (163/163), done.
+    remote: Total 1291 (delta 614), reused 584 (delta 584), pack-reused 544 (from 1)
+    Receiving objects: 100% (1291/1291), 1.92 MiB | 3.90 MiB/s, done.
+    Resolving deltas: 100% (767/767), done.
+    debuglabtest@missing-semester-test:~ $ perf script | FlameGraph/stackcollapse-perf.pl | FlameGraph/flamegraph.pl > flamegraph.svg
+    ```
+
+    ### Result of `flamegraph.svg`
+    You can open the flame graph in new tab and click frames to check more details
+    ![Flamegraph](../images/4_debugging-profiling/flamegraph.svg)
+
+3. Use `hyperfine` to benchmark two different implementations of the same task (e.g., `find` vs `fd`, `grep` vs `ripgrep`, or two versions of your own code).
+
+    ## **Answer**
+    ### Demo1 (Compare `find` and `fd`)
+    ```console
+    rightbear@Rightbear:~ $ find /home -type f -name makesymlinks.sh
+    /home/rightbear/dotfiles/makesymlinks.sh
+    rightbear@Rightbear:~ $ fd makesymlinks.sh /home
+    /home/rightbear/dotfiles/makesymlinks.sh
+    rightbear@Rightbear:~ $ hyperfine --warmup 3 'find /home -type f -name makesymlinks.sh' 'fd makesymlinks.sh /home'
+    Benchmark 1: find /home -type f -name makesymlinks.sh
+    Time (mean ± σ):     111.4 ms ±   3.4 ms    [User: 43.4 ms, System: 67.1 ms]
+    Range (min … max):   105.2 ms … 120.3 ms    26 runs
+
+    Benchmark 2: fd makesymlinks.sh /home
+    Time (mean ± σ):     170.0 ms ±  33.6 ms    [User: 7.5 ms, System: 22.4 ms]
+    Range (min … max):   109.8 ms … 252.3 ms    20 runs
+
+    Summary
+    find /home -type f -name makesymlinks.sh ran
+        1.53 ± 0.31 times faster than fd makesymlinks.sh /home
+    ```
+
+    ### Demo2 (Compare `grep` and `ripgrep`)
+    ```console
+    rightbear@Rightbear:~ $ grep -ir "dotfiles_old" /home
+    /home/rightbear/dotfiles/makesymlinks.sh:olddir=~/dotfiles_old             # old dotfiles backup directory
+    /home/rightbear/dotfiles/makesymlinks.sh:# create dotfiles_old in homedir
+    /home/rightbear/dotfiles/makesymlinks.sh:# move any existing dotfiles in homedir to dotfiles_old directory, then create symlinks from the homedir to any files in the ~/dotfiles directory specified in $files
+    /home/rightbear/dotfiles/makesymlinks.sh:    mv ~/.$file ~/dotfiles_old/
+    rightbear@Rightbear:~ $ rg -i "dotfiles_old" /home
+    /home/rightbear/dotfiles/makesymlinks.sh
+    13:olddir=~/dotfiles_old             # old dotfiles backup directory
+    18:# create dotfiles_old in homedir
+    30:# move any existing dotfiles in homedir to dotfiles_old directory, then create symlinks from the homedir to any files in the ~/dotfiles directory specified in $files
+    34:    mv ~/.$file ~/dotfiles_old/
+    rightbear@Rightbear:~ $ hyperfine --warmup 3 'grep -ir "dotfiles_old" /home' 'rg -i "dotfiles_old" /home'
+    Benchmark 1: grep -ir "dotfiles_old" /home
+    Time (mean ± σ):      4.531 s ±  0.053 s    [User: 3.708 s, System: 0.810 s]
+    Range (min … max):    4.440 s …  4.608 s    10 runs
+
+    Benchmark 2: rg -i "dotfiles_old" /home
+    Time (mean ± σ):       8.7 ms ±   1.1 ms    [User: 8.3 ms, System: 13.6 ms]
+    Range (min … max):     6.3 ms …  12.2 ms    304 runs
+
+    Summary
+    rg -i "dotfiles_old" /home ran
+    523.13 ± 65.17 times faster than grep -ir "dotfiles_old" /home
+    ```
+
+4. Use `htop` to monitor your system while running a resource-intensive program. Try using `taskset` to limit which CPUs a process can use: `taskset --cpu-list 0,2 stress -c 3`. Why doesn't `stress` use three CPUs?
+
+    ## **Answer**
+    ### Demo (Terminal1)
+    ```console
+    rightbear@Rightbear:~ $ taskset --cpu-list 0,2 stress -c 3
+    stress: info: [2322] dispatching hogs: 3 cpu, 0 io, 0 vm, 0 hdd
+    ```
+    
+    ### Demo (Terminal2)
+    ```console
+    rightbear@Rightbear:~ $ htop
+    ```
+
+    You can interactively monitor and manage your system's CPU, memory, and running processes in a real-time, colorful dashboard after inputting htop in the terminal.
+    ![htop Result1](../images/4_debugging-profiling/htop_2cpu.png)
+
+    ### Explanation
+    Based on the result of Terminal2, when observing in `htop`, you will notice that only CPU 0 and CPU 2 spike to 100% utilization (with the three threads contending and switching between the two cores) and the other CPU cores remain idle or under low load.  
+    The reason `stress` doesn’t use three CPU cores is that `taskset` sets a hard boundary enforced by the Linux kernel. Even though `stress -c 3 spawns 3` separate worker threads that want to run simultaneously, taskset `--cpu-list 0,2` explicitly tells the operating system's scheduler processes and all of their child threads are strictly forbidden from executing on any CPU other than Core 0 and Core 2.  
+    If we modify `--cpu-list 0,2` to `--cpu-list 0,1,2` in the previous command and rerun the task. All 3 worker threads can run simultaneously, because the number of allowed CPUs matches the requested workload.  
+
+    The result of running  `taskset --cpu-list 0,1,2 stress -c 3`:
+    ![htop Result2](../images/4_debugging-profiling/htop_3cpu.png)
+
+5. A common issue is that a port you want to listen on is already taken by another process. Learn how to discover that process: First execute `python -m http.server 4444` to start a minimal web server on port 4444. On a separate terminal run `ss -tlnp | grep 4444` to find the process. Terminate it with `kill <PID>`.
+
+    ## **Answer**
+    ### Demo (Terminal1)
+    ```console
+    rightbear@Rightbear:~ $ python -m http.server 4444
+    Serving HTTP on 0.0.0.0 port 4444 (http://0.0.0.0:4444/) ...
+
+    ```
+
+    ### Demo (Terminal2)
+    ```console
+    rightbear@Rightbear:~ $ ss -tlnp | grep 4444
+    LISTEN 0      5             0.0.0.0:4444      0.0.0.0:*    users:(("python3",pid=3210,fd=3))
+    rightbear@Rightbear:~ $ kill 3210
+    ```
+
+    ### Demo (Terminal1)
+    ```console
+    rightbear@Rightbear:~ $ python -m http.server 4444
+    Serving HTTP on 0.0.0.0 port 4444 (http://0.0.0.0:4444/) ...
+    Terminated
     ```
